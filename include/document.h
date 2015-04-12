@@ -118,6 +118,7 @@ typedef struct ldoc_nde_t
      */
     struct ldoc_nde_t* prnt;
     ldoc_struct_t tpe;
+    ldoc_doc_anno_t mkup;
     /**
      * Longest path to a leaf.
      */
@@ -259,6 +260,7 @@ extern ldoc_ser_t* LDOC_SER_NULL;
 extern ldoc_pos_t* LDOC_POS_NULL;
 extern ldoc_nde_t* LDOC_NDE_NULL;
 extern ldoc_ent_t* LDOC_ENT_NULL;
+extern ldoc_doc_anno_t LDOC_ANNO_NULL;
 
 /**
  * @brief Allocates a new node visitor data structure.
@@ -453,6 +455,36 @@ ldoc_ser_t* ldoc_vis_nde_post_html(ldoc_nde_t* nde, ldoc_coord_t* coord);
  */
 ldoc_ser_t* ldoc_vis_ent_html(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_setup_json(void);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_teardown_json(void);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_infx_json(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_post_json(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -168,6 +168,8 @@ TEST(ldoc_document, small_document)
     ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_UA);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
     
+    doc->rt = nde;
+    
     ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
     
@@ -184,7 +186,7 @@ TEST(ldoc_document, big_document)
 {
 }
 
-TEST(ldoc_document, format)
+TEST(ldoc_document, format_html)
 {
     ldoc_doc_t* doc = ldoc_big_doc();
     
@@ -201,6 +203,64 @@ TEST(ldoc_document, format)
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
     printf("%s", ser->sclr.str);
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, format_json)
+{
+    ldoc_doc_t* doc = ldoc_big_doc();
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    
+    printf("%s\n", ser->sclr.str);
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, format_json_custom_ids)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    
+    nde->mkup.anno.str = strdup("NID");
+    
+    doc->rt = nde;
+    
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.pair.anno.str = strdup("CID");
+    ent->pld.pair.dtm.str = strdup("data");
+    
+    ldoc_nde_ent_push(nde, ent);
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    
+    EXPECT_STREQ("{\"NID\":{\"CID\":\"data\"}}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }
