@@ -30,6 +30,7 @@ extern "C" {
  */
 typedef enum
 {
+    LDOC_NDE_RT,  // "root", cannot be instantiated manually
     LDOC_NDE_UA,  // "unassigned"
     LDOC_NDE_H1,  // "header 1", top-most header, largest header
     LDOC_NDE_H2,  // "header 2"
@@ -211,6 +212,7 @@ typedef struct ldoc_coord_t
  */
 typedef struct ldoc_vis_nde_t
 {
+    ldoc_ser_t* (*vis_rt)(ldoc_nde_t* nde, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_ua)(ldoc_nde_t* nde, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_par)(ldoc_nde_t* nde, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_ul)(ldoc_nde_t* nde, ldoc_coord_t* coord);

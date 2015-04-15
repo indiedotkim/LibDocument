@@ -37,6 +37,7 @@ static const char* ldoc_cnst_html_h6_cls = "</h6>\n";
 static const char* ldoc_cnst_html_par_cls = "</p>\n";
 
 static const char* ldoc_cnst_json_opn = "{";
+static const char* ldoc_cnst_json_lopn = "[";
 
 static const char* ldoc_cnst_json_nde = "NDE";
 
@@ -53,6 +54,28 @@ static const char* ldoc_cnst_json_par = "PAR";
 static const char* ldoc_cnst_json_txt = "TXT";
 
 static const char* ldoc_cnst_json_cls = "}";
+static const char* ldoc_cnst_json_lcls = "]";
+
+static inline ldoc_nde_t* ldoc_nde_new_(ldoc_struct_t tpe)
+{
+    ldoc_nde_t* nde = (ldoc_nde_t*)malloc(sizeof(ldoc_nde_t));
+    
+    if (!nde)
+    {
+        // TODO
+        return LDOC_NDE_NULL;
+    }
+    
+    nde->tpe = tpe;
+    nde->prnt = LDOC_NDE_NULL;
+    nde->mkup = LDOC_ANNO_NULL;
+    nde->ent_cnt = 0;
+    nde->dsc_cnt = 0;
+    TAILQ_INIT(&(nde->ents));
+    TAILQ_INIT(&(nde->dscs));
+    
+    return nde;
+}
 
 void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
@@ -62,8 +85,13 @@ void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
     
     // TODO Only strings supported right now.
     
-    size_t len1 = strlen(ser1->sclr.str);
     size_t len2 = strlen(ser2->sclr.str);
+    
+    // Again, nothing to concatenate:
+    if (!len2)
+        return;
+    
+    size_t len1 = strlen(ser1->sclr.str);
     size_t len = len1 + len2 + 1;
     
     ser1->sclr.str = realloc(ser1->sclr.str, len);
@@ -101,7 +129,15 @@ ldoc_doc_t* ldoc_doc_new()
         // TODO Error.
     }
     
-    doc->rt = LDOC_NDE_NULL;
+    ldoc_nde_t* rt = ldoc_nde_new_(LDOC_NDE_RT);
+    
+    if (!rt)
+    {
+        free(doc);
+        // TODO Error.
+    }
+    
+    doc->rt = rt;
     
     return doc;
 }
@@ -154,6 +190,7 @@ void ldoc_vis_nde_uni(ldoc_vis_nde_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nd
     vis->vis_ol = vis_uni;
     vis->vis_oo = vis_uni;
     vis->vis_par = vis_uni;
+    vis->vis_rt = vis_uni;
     vis->vis_ua = vis_uni;
     vis->vis_ul = vis_uni;
 }
@@ -207,6 +244,7 @@ char* ldoc_qry_ent_fst(ldoc_nde_t* nde)
     size_t str_len = strlen(ent->pld.str);
     char* str = (char*)malloc(str_len + 1);
     strncpy(str, ent->pld.str, str_len);
+    str[str_len] = 0;
     
     if (!str)
     {
@@ -255,6 +293,7 @@ char* ldoc_cnv_ent_html(ldoc_ent_t* ent)
             html_len = strlen(ent->pld.str);
             html = (char*)malloc(html_len + 1);
             strncpy(html, ent->pld.str, html_len);
+            html[html_len] = 0;
             return html;
         case LDOC_ENT_URI:
             // TODO
@@ -264,7 +303,11 @@ char* ldoc_cnv_ent_html(ldoc_ent_t* ent)
             break;
     }
     
-    return NULL;
+    // Note; Hardly optimal, but currently no idea how to
+    //       implement it better.
+    html = (char*)calloc(1, 1);
+    
+    return html;
 }
 
 char* ldoc_cnv_nde_html_opn(ldoc_nde_t* nde)
@@ -322,6 +365,8 @@ char* ldoc_cnv_nde_html_opn(ldoc_nde_t* nde)
             html = (char*)malloc(html_len + 1);
             strcpy(html, ldoc_cnst_html_par_opn);
             return html;
+        case LDOC_NDE_RT:
+            break;
         case LDOC_NDE_UA:
             break;
         case LDOC_NDE_UL:
@@ -331,12 +376,15 @@ char* ldoc_cnv_nde_html_opn(ldoc_nde_t* nde)
             break;
     }
     
-    return NULL;
+    // Note; Hardly optimal, but currently no idea how to
+    //       implement it better.
+    html = (char*)calloc(1, 1);
+    
+    return html;
 }
 
 char* ldoc_cnv_nde_html_cls(ldoc_nde_t* nde)
 {
-    char* pld;
     char* html;
     size_t html_len;
     
@@ -393,24 +441,37 @@ char* ldoc_cnv_nde_html_cls(ldoc_nde_t* nde)
             break;
     }
     
-    return NULL;
+    // Note; Hardly optimal, but currently no idea how to
+    //       implement it better.
+    html = (char*)calloc(1, 1);
+    
+    return html;
 }
 
 static inline void ldoc_strcat(ldoc_ser_t* ser, char* s1)
 {
-    size_t len1 = strlen(s1);
+    size_t len1;
+    
+    if (!s1)
+        len1 = 0;
+    else
+        len1 = strlen(s1);
+    
     ser->sclr.str = (char*)malloc(len1 + 1);
     
     // If you do not know why the next line needs to be there, then
     // you have not read the man page of strncpy.
     ser->sclr.str[len1] = 0;
-    strncpy(ser->sclr.str, s1, len1);
+    
+    if (len1)
+        strncpy(ser->sclr.str, s1, len1);
 }
 
 static inline void ldoc_strcat2(ldoc_ser_t* ser, char* s1, char* s2)
 {
     size_t len1 = strlen(s1);
     size_t len2 = strlen(s2);
+
     ser->sclr.str = (char*)malloc(len1 + len2 + 1);
     
     // If you do not know why the next line needs to be there, then
@@ -466,7 +527,7 @@ ldoc_ser_t* ldoc_vis_teardown_html(void)
 
 ldoc_ser_t* ldoc_vis_nde_pre_html(ldoc_nde_t* nde, ldoc_coord_t* coord)
 {
-    size_t idnt_len = 2 * (coord->lvl + 2);
+    size_t idnt_len = coord->lvl ? 2 * (coord->lvl) + 2 : 0;
     char* idnt = (char*)malloc(idnt_len + 1);
     
     memset(idnt, ' ', idnt_len);
@@ -485,7 +546,7 @@ static ldoc_ser_t* ldoc_vis_nde_cls_html(ldoc_nde_t* nde, ldoc_coord_t* coord, b
     char* idnt = NULL;
     if (indent)
     {
-        size_t idnt_len = 2 * (coord->lvl + 2);
+        size_t idnt_len = coord->lvl ? 2 * (coord->lvl) + 2 : 0;
         char* idnt = (char*)malloc(idnt_len + 1);
         memset(idnt, ' ', idnt_len);
         idnt[idnt_len] = 0;
@@ -558,9 +619,24 @@ ldoc_ser_t* ldoc_vis_teardown_json(void)
 
 ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
 {
+    ldoc_ser_t* ser;
+    
+    if (!coord->lvl)
+    {
+        ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+        
+        // TODO Error handling.
+        
+        ser->sclr.str = (char*)calloc(1, 1);
+        
+        // TODO Error handling.
+        
+        return ser;
+    }
+    
     char sep[2];
     
-    if (coord->lvl > 0 || coord->pln > 0)
+    if (coord->pln > 0 || nde->prnt->ent_cnt)
     {
         sep[0] = ',';
         sep[1] = 0;
@@ -585,10 +661,26 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
         snprintf(lbl, lbl_len, "%s-%llx", ldoc_cnst_json_nde, (unsigned long long)nde);
     }
     
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    const char* opn;
+    if (nde->tpe == LDOC_NDE_OL)
+        opn = ldoc_cnst_json_lopn;
+    else
+        opn = ldoc_cnst_json_opn;
+    
+    ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
     size_t ser_len = strlen(lbl) + 5 + 1;
+    
+    if (nde->prnt->tpe == LDOC_NDE_OL)
+        ser_len++;
+    
     ser->sclr.str = (char*)malloc(ser_len + 1);
-    snprintf(ser->sclr.str, ser_len, "%s\"%s\":%s", sep, lbl, ldoc_cnst_json_opn);
+    
+    // TODO Error handling.
+    
+    if (nde->prnt->tpe == LDOC_NDE_OL)
+        snprintf(ser->sclr.str, ser_len, "%s{\"%s\":%s", sep, lbl, opn);
+    else
+        snprintf(ser->sclr.str, ser_len, "%s\"%s\":%s", sep, lbl, opn);
     
     return ser;
 }
@@ -600,10 +692,36 @@ ldoc_ser_t* ldoc_vis_nde_infx_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
 
 ldoc_ser_t* ldoc_vis_nde_post_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
 {
-    char* json = strdup(ldoc_cnst_json_cls);
+    char* json;
+    
+    if (!coord->lvl)
+    {
+        json = (char*)calloc(1, 1);
+    }
+    else if (nde->tpe == LDOC_NDE_OL)
+    {
+        json = strdup(ldoc_cnst_json_lcls);
+    }
+    else
+    {
+        json = strdup(ldoc_cnst_json_cls);
+    }
     
     ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
-    ser->sclr.str = json;
+    
+    if (nde->prnt && nde->prnt->tpe == LDOC_NDE_OL)
+    {
+        size_t clen = strlen(json) + 2;
+        ser->sclr.str = (char*)malloc(clen + 1);
+        
+        // TODO Error handling.
+        
+        snprintf(ser->sclr.str, clen, "%s}", json);
+        
+        free(json);
+    }
+    else
+        ser->sclr.str = json;
     
     return ser;
 }
@@ -650,50 +768,58 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     
     size_t lbl_len = 0;
     char* lbl = NULL;
-    switch (ent->tpe) {
-        case LDOC_ENT_EM1:
-            lbl_len = strlen(ldoc_cnst_json_em1) + 20 + 1;
-            lbl = (char*)malloc(lbl_len);
-            // TODO Error handling.
-            snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_em1, (unsigned long long)ent);
-            break;
-        case LDOC_ENT_EM2:
-            lbl_len = strlen(ldoc_cnst_json_em2) + 20 + 1;
-            lbl = (char*)malloc(lbl_len);
-            // TODO Error handling.
-            snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_em2, (unsigned long long)ent);
-            break;
-        case LDOC_ENT_NUM:
-            lbl_len = strlen(ldoc_cnst_json_num) + 20 + 1;
-            lbl = (char*)malloc(lbl_len);
-            // TODO Error handling.
-            snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_num, (unsigned long long)ent);
-            break;
-        case LDOC_ENT_OR:
-            lbl_len = strlen(ent->pld.pair.anno.str) + 4;
-            lbl = (char*)malloc(lbl_len + 1);
-            // TODO Error handling.
-            snprintf(lbl, lbl_len, "\"%s\":", ent->pld.pair.anno.str, (unsigned long long)ent);
-            break;
-        case LDOC_ENT_REF:
-            // TODO
-            break;
-        case LDOC_ENT_TXT:
-            lbl_len = strlen(ldoc_cnst_json_txt) + 21;
-            lbl = (char*)malloc(lbl_len + 1);
-            // TODO Error handling.
-            snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_txt, (unsigned long long)ent);
-            break;
-        case LDOC_ENT_URI:
-            // TODO
-            break;
-        default:
-            // TODO Error handling.
-            lbl = NULL;
-            break;
-    }
-    size_t lbl_len_act = strlen(lbl);
-    size_t clen = lbl_len_act + json_len + (coord->pln ? 1 : 0);
+    if (nde->tpe != LDOC_NDE_OL)
+        switch (ent->tpe) {
+            case LDOC_ENT_EM1:
+                lbl_len = strlen(ldoc_cnst_json_em1) + 20 + 1;
+                lbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_em1, (unsigned long long)ent);
+                break;
+            case LDOC_ENT_EM2:
+                lbl_len = strlen(ldoc_cnst_json_em2) + 20 + 1;
+                lbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_em2, (unsigned long long)ent);
+                break;
+            case LDOC_ENT_NUM:
+                lbl_len = strlen(ldoc_cnst_json_num) + 20 + 1;
+                lbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_num, (unsigned long long)ent);
+                break;
+            case LDOC_ENT_OR:
+                lbl_len = strlen(ent->pld.pair.anno.str) + 4;
+                lbl = (char*)malloc(lbl_len + 1);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s\":", ent->pld.pair.anno.str);
+                break;
+            case LDOC_ENT_REF:
+                // TODO
+                break;
+            case LDOC_ENT_TXT:
+                lbl_len = strlen(ldoc_cnst_json_txt) + 21;
+                lbl = (char*)malloc(lbl_len + 1);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_txt, (unsigned long long)ent);
+                break;
+            case LDOC_ENT_URI:
+                // TODO
+                break;
+            default:
+                // TODO Error handling.
+                lbl = NULL;
+                break;
+        }
+    
+    size_t lbl_len_act;
+    
+    if (lbl)
+        lbl_len_act = strlen(lbl);
+    else
+        lbl_len_act = lbl_len;
+    
+    size_t clen = lbl_len_act + + json_len + (coord->pln ? 1 : 0);
     
     ser->sclr.str = (char*)malloc(clen + 1);
     
@@ -745,6 +871,8 @@ static inline ldoc_ser_t* ldoc_vis_nde_tpe(ldoc_nde_t* nde, ldoc_coord_t* coord,
             return vis->vis_oo(nde, coord);
         case LDOC_NDE_PAR:
             return vis->vis_par(nde, coord);
+        case LDOC_NDE_RT:
+            return vis->vis_rt(nde, coord);
         case LDOC_NDE_UA:
             return vis->vis_ua(nde, coord);
         case LDOC_NDE_UL:
@@ -754,7 +882,7 @@ static inline ldoc_ser_t* ldoc_vis_nde_tpe(ldoc_nde_t* nde, ldoc_coord_t* coord,
             break;
     }
     
-    return NULL;
+    return LDOC_SER_NULL;
 }
 
 static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_ent_t* vis_ent)
@@ -778,7 +906,7 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
     
     // Increase level for following node visits:
     coord->lvl++;
-    
+
     ldoc_nde_t* dsc;
     TAILQ_FOREACH(dsc, &(nde->dscs), ldoc_nde_entries)
     {
@@ -787,13 +915,13 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
         ldoc_ser_concat(ser, ser_nde);
     }
     
-    ldoc_ser_t* ser_post = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->post));
-    
-    ldoc_ser_concat(ser, ser_post);
-    
     // Decrease level after visit:
     // TODO Probably not working like this... check with binary tree (n >= 2).
     coord->lvl--;
+    
+    ldoc_ser_t* ser_post = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->post));
+    
+    ldoc_ser_concat(ser, ser_post);
     
     return ser;
 }
@@ -817,23 +945,13 @@ void ldoc_ent_free(ldoc_ent_t* ent)
 
 ldoc_nde_t* ldoc_nde_new(ldoc_struct_t tpe)
 {
-    ldoc_nde_t* nde = (ldoc_nde_t*)malloc(sizeof(ldoc_nde_t));
-    
-    if (!nde)
+    if (tpe == LDOC_NDE_RT)
     {
-        // TODO
+        // TODO Error.
         return LDOC_NDE_NULL;
     }
     
-    nde->tpe = tpe;
-    nde->prnt = LDOC_NDE_NULL;
-    nde->mkup = LDOC_ANNO_NULL;
-    nde->ent_cnt = 0;
-    nde->dsc_cnt = 0;
-    TAILQ_INIT(&(nde->ents));
-    TAILQ_INIT(&(nde->dscs));
-    
-    return nde;
+    return ldoc_nde_new_(tpe);
 }
 
 void ldoc_nde_free(ldoc_nde_t* nde)
