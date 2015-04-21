@@ -53,6 +53,8 @@ static const char* ldoc_cnst_json_num = "NUM";
 static const char* ldoc_cnst_json_par = "PAR";
 static const char* ldoc_cnst_json_txt = "TXT";
 
+static const char* ldoc_cnst_json_null = "null";
+
 static const char* ldoc_cnst_json_cls = "}";
 static const char* ldoc_cnst_json_lcls = "]";
 
@@ -731,17 +733,30 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
     size_t val_len;
     char* val;
     
-    switch (ent->tpe) {
-        case LDOC_ENT_NUM:
-            val_len = strlen(ent->pld.str);
-            val = strdup(ent->pld.str);
-            break;
-        default:
-            val_len = strlen(ent->pld.str) + 3;
-            val = (char*)malloc(val_len + 1);
-            snprintf(val, val_len, "\"%s\"", ent->pld.str);
-            break;
+    if ((ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
+    {
+        val_len = strlen(ldoc_cnst_json_null);
+        val = strdup(ldoc_cnst_json_null);
     }
+    else
+        switch (ent->tpe)
+        {
+            case LDOC_ENT_NUM:
+                val_len = strlen(ent->pld.str);
+                val = strdup(ent->pld.str);
+                break;
+            case LDOC_ENT_OR:
+                val_len = strlen(ent->pld.pair.dtm.str) + 3;
+                val = (char*)malloc(val_len + 1);
+                snprintf(val, val_len, "\"%s\"", ent->pld.pair.dtm.str);
+                break;
+            default:
+                val_len = strlen(ent->pld.str) + 3;
+                val = (char*)malloc(val_len + 1);
+                snprintf(val, val_len, "\"%s\"", ent->pld.str);
+                break;
+        }
     
     if (!val)
     {
