@@ -902,9 +902,13 @@ static inline ldoc_ser_t* ldoc_vis_nde_tpe(ldoc_nde_t* nde, ldoc_coord_t* coord,
 
 static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_ent_t* vis_ent)
 {
-    coord->pln = 0;
-    
     ldoc_ser_t* ser = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->pre));
+
+    // Remember which plane the node is on:
+    uint32_t pln = coord->pln;
+    
+    // Descendants (entities) will get the plane reported relative to this node:
+    coord->pln = 0;
     
     ldoc_ent_t* ent;
     TAILQ_FOREACH(ent, &(nde->ents), ldoc_ent_entries)
@@ -919,6 +923,9 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
     ldoc_ser_t* ser_infx = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->infx));
     ldoc_ser_concat(ser, ser_infx);
     
+    // Reset plane -- for node visits:
+    coord->pln = pln;
+    
     // Increase level for following node visits:
     coord->lvl++;
 
@@ -928,6 +935,8 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
         ldoc_ser_t* ser_nde = ldoc_vis_nde(dsc, coord, vis_nde, vis_ent);
         
         ldoc_ser_concat(ser, ser_nde);
+        
+        coord->pln++;
     }
     
     // Decrease level after visit:

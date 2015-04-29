@@ -41,6 +41,10 @@ static const char* ldoc_ord_doc_4_2_2k = "Key 2.2";
 static const char* ldoc_ord_doc_4_2_2v = "Value 2.2";
 static const char* ldoc_ord_doc_4_3 = "Node 3";
 
+static const char* ldoc_ord_doc_hd_1 = "List 1";
+static const char* ldoc_ord_doc_hd_2 = "List 2";
+static const char* ldoc_ord_doc_hd_3 = "List 3";
+
 static ldoc_doc_t* ldoc_big_doc()
 {
     ldoc_doc_t* doc = ldoc_doc_new();
@@ -159,12 +163,83 @@ static ldoc_doc_t* ldoc_ord_doc()
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
     ent->pld.str = (char*)ldoc_ord_doc_1;
     ldoc_nde_ent_push(nde, ent);
+    
+    ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.str = (char*)ldoc_ord_doc_2;
+    ldoc_nde_ent_push(nde, ent);
+    
+    ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.str = (char*)ldoc_ord_doc_3;
+    ldoc_nde_ent_push(nde, ent);
+    
+    ldoc_nde_t* nde_ = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde_);
+    nde_->mkup.anno.str = (char*)ldoc_ord_doc_4_1;
+    ldoc_nde_dsc_push(nde, nde_);
+    
+    ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_4_1_1k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_4_1_1v;
+    ldoc_nde_ent_push(nde_, ent);
+    
+    nde_ = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde_);
+    nde_->mkup.anno.str = (char*)ldoc_ord_doc_4_2;
+    ldoc_nde_dsc_push(nde, nde_);
+    
+    ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_4_2_1k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_4_2_1v;
+    ldoc_nde_ent_push(nde_, ent);
+    
+    ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_4_2_2k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_4_2_2v;
+    ldoc_nde_ent_push(nde_, ent);
+    
+    nde_ = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde_);
+    nde_->mkup.anno.str = (char*)ldoc_ord_doc_4_3;
+    ldoc_nde_dsc_push(nde, nde_);
+    
+    return doc;
+}
 
+static ldoc_doc_t* ldoc_mul_ord_doc()
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_1;
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.str = (char*)ldoc_ord_doc_1;
+    ldoc_nde_ent_push(nde, ent);
+
+    nde = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_2;
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
     ent = ldoc_ent_new(LDOC_ENT_TXT);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
     ent->pld.str = (char*)ldoc_ord_doc_2;
     ldoc_nde_ent_push(nde, ent);
 
+    nde = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_3;
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
     ent = ldoc_ent_new(LDOC_ENT_TXT);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
     ent->pld.str = (char*)ldoc_ord_doc_3;
@@ -407,6 +482,28 @@ TEST(ldoc_document, format_json_lists)
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
     EXPECT_STREQ("{\"Lists\":[\"Entity 1\",\"Entity 2\",\"Entity 3\",{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, format_json_multiple_lists)
+{
+    ldoc_doc_t* doc = ldoc_mul_ord_doc();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[\"Entity 3\",{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }
