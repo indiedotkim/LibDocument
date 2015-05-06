@@ -920,8 +920,11 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
 {
     ldoc_ser_t* ser = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->pre));
 
-    // Remember which plane the node is on:
-    uint32_t pln = coord->pln;
+    // Always set plane to zero when entering a new node:
+    // - Bug? Was beforehand:
+    //     Remember which plane the node is on:
+    //     uint32_t pln = coord->pln;
+    uint32_t pln = 0;
     
     // Descendants (entities) will get the plane reported relative to this node:
     coord->pln = 0;

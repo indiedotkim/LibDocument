@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (c) 2015 CODAMONO, Ontario, Canada
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -41,6 +41,8 @@ static const char* ldoc_ord_doc_4_2_1v = "Value 2.1";
 static const char* ldoc_ord_doc_4_2_2k = "Key 2.2";
 static const char* ldoc_ord_doc_4_2_2v = "Value 2.2";
 static const char* ldoc_ord_doc_4_3 = "Node 3";
+static const char* ldoc_ord_doc_5_1k = "Key 4.1";
+static const char* ldoc_ord_doc_5_1v = "Value 4.1";
 
 static const char* ldoc_ord_doc_hd_1 = "List 1";
 static const char* ldoc_ord_doc_hd_2 = "List 2";
@@ -157,7 +159,7 @@ static ldoc_doc_t* ldoc_ord_doc()
     
     ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_OL);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
-    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd;
+    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_1;
     ldoc_nde_dsc_push(doc->rt, nde);
     
     ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
@@ -208,6 +210,22 @@ static ldoc_doc_t* ldoc_ord_doc()
     EXPECT_NE(NULL, (LDOC_NULLTYPE)nde_);
     nde_->mkup.anno.str = (char*)ldoc_ord_doc_4_3;
     ldoc_nde_dsc_push(nde, nde_);
+    
+    nde = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_2;
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
+    nde_ = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde_->mkup.anno.str = (char*)ldoc_ord_doc_hd_3;
+    ldoc_nde_dsc_push(nde, nde_);
+    
+    ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_5_1k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_5_1v;
+    ldoc_nde_ent_push(nde_, ent);
     
     return doc;
 }
@@ -484,7 +502,7 @@ TEST(ldoc_document, format_json_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"Lists\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}],\"List 2\":[{\"List 3\":[{\"Key 4.1\":\"Value 4.1\"}]}]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }
