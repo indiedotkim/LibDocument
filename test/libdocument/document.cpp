@@ -30,7 +30,8 @@ static const char* ldoc_big_doc_2_2_4 = " text!";
 static const char* ldoc_ord_doc_hd = "Lists";
 static const char* ldoc_ord_doc_1 = "Entity 1";
 static const char* ldoc_ord_doc_2 = "Entity 2";
-static const char* ldoc_ord_doc_3 = "Entity 3";
+static const char* ldoc_ord_doc_3k = "Entity 3 (key)";
+static const char* ldoc_ord_doc_3v = "Entity 3 (value)";
 static const char* ldoc_ord_doc_4_1 = "Node 1";
 static const char* ldoc_ord_doc_4_1_1k = "Key 1";
 static const char* ldoc_ord_doc_4_1_1v = "Value 1";
@@ -169,9 +170,10 @@ static ldoc_doc_t* ldoc_ord_doc()
     ent->pld.str = (char*)ldoc_ord_doc_2;
     ldoc_nde_ent_push(nde, ent);
     
-    ent = ldoc_ent_new(LDOC_ENT_TXT);
+    ent = ldoc_ent_new(LDOC_ENT_OR);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
-    ent->pld.str = (char*)ldoc_ord_doc_3;
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_3k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_3v;
     ldoc_nde_ent_push(nde, ent);
     
     ldoc_nde_t* nde_ = ldoc_nde_new(LDOC_NDE_UA);
@@ -240,9 +242,10 @@ static ldoc_doc_t* ldoc_mul_ord_doc()
     nde->mkup.anno.str = (char*)ldoc_ord_doc_hd_3;
     ldoc_nde_dsc_push(doc->rt, nde);
     
-    ent = ldoc_ent_new(LDOC_ENT_TXT);
+    ent = ldoc_ent_new(LDOC_ENT_OR);
     EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
-    ent->pld.str = (char*)ldoc_ord_doc_3;
+    ent->pld.pair.anno.str = (char*)ldoc_ord_doc_3k;
+    ent->pld.pair.dtm.str = (char*)ldoc_ord_doc_3v;
     ldoc_nde_ent_push(nde, ent);
     
     ldoc_nde_t* nde_ = ldoc_nde_new(LDOC_NDE_UA);
@@ -481,7 +484,7 @@ TEST(ldoc_document, format_json_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"Lists\":[\"Entity 1\",\"Entity 2\",\"Entity 3\",{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"Lists\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }
@@ -503,7 +506,7 @@ TEST(ldoc_document, format_json_multiple_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[\"Entity 3\",{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }

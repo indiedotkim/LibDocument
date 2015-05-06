@@ -783,8 +783,24 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     
     size_t lbl_len = 0;
     char* lbl = NULL;
-    if (nde->tpe != LDOC_NDE_OL)
-        switch (ent->tpe) {
+    if (nde->tpe == LDOC_NDE_OL)
+        switch (ent->tpe)
+        {
+            case LDOC_ENT_OR:
+                lbl_len = strlen(ent->pld.pair.anno.str) + json_len + 6;
+                lbl = (char*)malloc(lbl_len + 1);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "{\"%s\":%s}", ent->pld.pair.anno.str, json);
+                free(json);
+                json_len = 0;
+                json = NULL;
+                break;
+            default:
+                break;
+        }
+    else
+        switch (ent->tpe)
+        {
             case LDOC_ENT_EM1:
                 lbl_len = strlen(ldoc_cnst_json_em1) + 20 + 1;
                 lbl = (char*)malloc(lbl_len);
@@ -834,7 +850,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     else
         lbl_len_act = lbl_len;
     
-    size_t clen = lbl_len_act + + json_len + (coord->pln ? 1 : 0);
+    size_t clen = lbl_len_act + json_len + (coord->pln ? 1 : 0);
     
     ser->sclr.str = (char*)malloc(clen + 1);
     
