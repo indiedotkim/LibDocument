@@ -48,6 +48,12 @@ static const char* ldoc_ord_doc_hd_1 = "List 1";
 static const char* ldoc_ord_doc_hd_2 = "List 2";
 static const char* ldoc_ord_doc_hd_3 = "List 3";
 
+static const char* ldoc_ref_nr_k = "Key (Number)";
+static const char* ldoc_ref_nr_v = "12345";
+static const char* ldoc_ref_or_k = "Key (String)";
+static const char* ldoc_ref_or_v = "String";
+static const char* ldoc_ref_json = "{\"NID\":{\"Key (String)\":\"String\",\"Key (Number)\":12345}}";
+
 static ldoc_doc_t* ldoc_big_doc()
 {
     ldoc_doc_t* doc = ldoc_doc_new();
@@ -481,6 +487,51 @@ TEST(ldoc_document, format_json_null)
     }
     
     EXPECT_EQ(2, null_cnt);
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, format_json_references)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = strdup("NID");
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
+    // Ontology reference:
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_OR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.pair.anno.str = strdup(ldoc_ref_or_k);
+    ent->pld.pair.dtm.str = strdup(ldoc_ref_or_v);
+    
+    ldoc_nde_ent_push(nde, ent);
+    
+    // Number reference:
+    ent = ldoc_ent_new(LDOC_ENT_NR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.pair.anno.str = strdup(ldoc_ref_nr_k);
+    ent->pld.pair.dtm.str = strdup(ldoc_ref_nr_v);
+    
+    ldoc_nde_ent_push(nde, ent);
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    
+    EXPECT_STREQ(ldoc_ref_json, ser->sclr.str);
     
     ldoc_doc_free(doc);
 }

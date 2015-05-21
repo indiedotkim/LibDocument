@@ -203,6 +203,7 @@ void ldoc_vis_ent_uni(ldoc_vis_ent_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nd
     vis->vis_em1 = vis_uni;
     vis->vis_em2 = vis_uni;
     vis->vis_num = vis_uni;
+    vis->vis_nr = vis_uni;
     vis->vis_or = vis_uni;
     vis->vis_ref = vis_uni;
     vis->vis_txt = vis_uni;
@@ -219,6 +220,8 @@ static inline ldoc_ser_t* ldoc_vis_ent(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_co
             return vis->vis_em2(nde, ent, coord);
         case LDOC_ENT_NUM:
             return vis->vis_num(nde, ent, coord);
+        case LDOC_ENT_NR:
+            return vis->vis_nr(nde, ent, coord);
         case LDOC_ENT_OR:
             return vis->vis_or(nde, ent, coord);
         case LDOC_ENT_REF:
@@ -283,6 +286,9 @@ char* ldoc_cnv_ent_html(ldoc_ent_t* ent)
             snprintf(html, html_len, "%s%s%s", ldoc_cnst_html_em2_opn, ent->pld.str, ldoc_cnst_html_em2_cls);
             return html;
         case LDOC_ENT_NUM:
+            // TODO
+            break;
+        case LDOC_ENT_NR:
             // TODO
             break;
         case LDOC_ENT_OR:
@@ -733,18 +739,24 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
     size_t val_len;
     char* val;
     
-    if ((ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
+    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
         (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
     {
         val_len = strlen(ldoc_cnst_json_null);
         val = strdup(ldoc_cnst_json_null);
     }
     else
+        // TODO Check why val_len is one larger than required (???) some times.
         switch (ent->tpe)
         {
             case LDOC_ENT_NUM:
                 val_len = strlen(ent->pld.str);
                 val = strdup(ent->pld.str);
+                break;
+            case LDOC_ENT_NR:
+                val_len = strlen(ent->pld.pair.dtm.str) + 1;
+                val = strdup(ent->pld.pair.dtm.str);
                 break;
             case LDOC_ENT_OR:
                 val_len = strlen(ent->pld.pair.dtm.str) + 3;
@@ -786,6 +798,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     if (nde->tpe == LDOC_NDE_OL)
         switch (ent->tpe)
         {
+            case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 lbl_len = strlen(ent->pld.pair.anno.str) + json_len + 6;
                 lbl = (char*)malloc(lbl_len + 1);
@@ -819,6 +832,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
                 // TODO Error handling.
                 snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_num, (unsigned long long)ent);
                 break;
+            case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 lbl_len = strlen(ent->pld.pair.anno.str) + 4;
                 lbl = (char*)malloc(lbl_len + 1);

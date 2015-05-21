@@ -60,6 +60,7 @@ typedef enum
     LDOC_ENT_URI,
     LDOC_ENT_REF, // "reference", points to an anchor ("ANC")
     LDOC_ENT_NUM, // "number"
+    LDOC_ENT_NR,  // numbered reference (for example, "citation": 12)
     LDOC_ENT_OR   // ontology reference, base determined by an ontology object (OO)
 } ldoc_content_t;
 
@@ -254,6 +255,7 @@ typedef struct ldoc_vis_ent_t
     ldoc_ser_t* (*vis_uri)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_ref)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_num)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
+    ldoc_ser_t* (*vis_nr)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_or)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_txt)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
 } ldoc_vis_ent_t;
