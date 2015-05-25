@@ -553,7 +553,7 @@ TEST(ldoc_document, format_json_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"List 1\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}],\"List 2\":[{\"List 3\":[{\"Key 4.1\":\"Value 4.1\"}]}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}],\"List 2\":[[{\"Key 4.1\":\"Value 4.1\"}]]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }
@@ -575,7 +575,7 @@ TEST(ldoc_document, format_json_multiple_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Node 1\":{\"Key 1\":\"Value 1\"}},{\"Node 2\":{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"}},{\"Node 3\":{}}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}]}", ser->sclr.str);
     
     ldoc_doc_free(doc);
 }

@@ -657,7 +657,9 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     size_t lbl_len;
     char* lbl;
     
-    if (nde->mkup.anno.str != NULL)
+    if (nde->prnt->tpe == LDOC_NDE_OL)
+        lbl = "";
+    else if (nde->mkup.anno.str != NULL)
     {
         lbl_len = strlen(nde->mkup.anno.str);
         lbl = nde->mkup.anno.str;
@@ -678,15 +680,16 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
     size_t ser_len = strlen(lbl) + 5 + 1;
     
-    if (nde->prnt->tpe == LDOC_NDE_OL)
-        ser_len++;
+    //if (nde->prnt->tpe == LDOC_NDE_OL)
+    //    ser_len++;
     
     ser->sclr.str = (char*)malloc(ser_len + 1);
     
     // TODO Error handling.
     
+    // If we are in an ordered list, then do not include a node's label:
     if (nde->prnt->tpe == LDOC_NDE_OL)
-        snprintf(ser->sclr.str, ser_len, "%s{\"%s\":%s", sep, lbl, opn);
+        snprintf(ser->sclr.str, ser_len, "%s%s", sep, opn);
     else
         snprintf(ser->sclr.str, ser_len, "%s\"%s\":%s", sep, lbl, opn);
     
@@ -719,12 +722,12 @@ ldoc_ser_t* ldoc_vis_nde_post_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     
     if (nde->prnt && nde->prnt->tpe == LDOC_NDE_OL)
     {
-        size_t clen = strlen(json) + 2;
+        size_t clen = strlen(json) + 1;
         ser->sclr.str = (char*)malloc(clen + 1);
         
         // TODO Error handling.
         
-        snprintf(ser->sclr.str, clen, "%s}", json);
+        snprintf(ser->sclr.str, clen, "%s", json);
         
         free(json);
     }
