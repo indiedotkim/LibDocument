@@ -146,6 +146,8 @@ ldoc_doc_t* ldoc_doc_new()
 
 void ldoc_doc_free(ldoc_doc_t* doc)
 {
+    ldoc_nde_free(doc->rt);
+    
     free(doc);
 }
 
@@ -998,7 +1000,7 @@ ldoc_ent_t* ldoc_ent_new(ldoc_content_t tpe)
 
 void ldoc_ent_free(ldoc_ent_t* ent)
 {
-    // TODO
+    // TODO -- update: this should be it; no more to-do?
     
     free(ent);
 }
@@ -1016,7 +1018,19 @@ ldoc_nde_t* ldoc_nde_new(ldoc_struct_t tpe)
 
 void ldoc_nde_free(ldoc_nde_t* nde)
 {
-    // TODO
+    ldoc_ent_t* ent;
+    
+    TAILQ_FOREACH(ent, &(nde->ents), ldoc_ent_entries)
+    {
+        ldoc_ent_free(ent);
+    }
+    
+    ldoc_nde_t* cld;
+    
+    TAILQ_FOREACH(cld, &(nde->dscs), ldoc_nde_entries)
+    {
+        ldoc_nde_free(cld);
+    }
     
     free(nde);
 }
