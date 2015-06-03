@@ -62,6 +62,7 @@ typedef enum
     LDOC_ENT_URI,
     LDOC_ENT_REF, // "reference", points to an anchor ("ANC")
     LDOC_ENT_NUM, // "number"
+    LDOC_ENT_BL,  // "boolean", truth value
     LDOC_ENT_NR,  // numbered reference (for example, "citation": 12)
     LDOC_ENT_OR   // ontology reference, base determined by an ontology object (OO)
 } ldoc_content_t;
@@ -104,6 +105,7 @@ typedef struct ldoc_py_t
  */
 typedef union
 {
+    bool bl;
     char* str;
     ldoc_raw_t raw;
     ldoc_doc_anno_t pair;
@@ -274,6 +276,7 @@ typedef struct ldoc_vis_nde_ord_t
  */
 typedef struct ldoc_vis_ent_t
 {
+    ldoc_ser_t* (*vis_bl)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_em1)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_em2)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
     ldoc_ser_t* (*vis_uri)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);

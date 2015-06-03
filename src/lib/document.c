@@ -41,6 +41,7 @@ static const char* ldoc_cnst_json_lopn = "[";
 
 static const char* ldoc_cnst_json_nde = "NDE";
 
+static const char* ldoc_cnst_json_bl = "BOOL";
 static const char* ldoc_cnst_json_em1 = "EM1";
 static const char* ldoc_cnst_json_em2 = "EM2";
 static const char* ldoc_cnst_json_h1 = "H1";
@@ -53,6 +54,8 @@ static const char* ldoc_cnst_json_num = "NUM";
 static const char* ldoc_cnst_json_par = "PAR";
 static const char* ldoc_cnst_json_txt = "TXT";
 
+static const char* ldoc_cnst_json_false = "false";
+static const char* ldoc_cnst_json_true = "true";
 static const char* ldoc_cnst_json_null = "null";
 
 static const char* ldoc_cnst_json_cls = "}";
@@ -310,6 +313,7 @@ void ldoc_vis_nde_uni(ldoc_vis_nde_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nd
 
 void ldoc_vis_ent_uni(ldoc_vis_ent_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord))
 {
+    vis->vis_bl = vis_uni;
     vis->vis_em1 = vis_uni;
     vis->vis_em2 = vis_uni;
     vis->vis_num = vis_uni;
@@ -324,6 +328,8 @@ static inline ldoc_ser_t* ldoc_vis_ent(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_co
 {
     switch (ent->tpe)
     {
+        case LDOC_ENT_BL:
+            return vis->vis_bl(nde, ent, coord);
         case LDOC_ENT_EM1:
             return vis->vis_em1(nde, ent, coord);
         case LDOC_ENT_EM2:
@@ -385,6 +391,9 @@ char* ldoc_cnv_ent_html(ldoc_ent_t* ent)
     size_t html_len;
     
     switch (ent->tpe) {
+        case LDOC_ENT_BL:
+            // TODO
+            break;
         case LDOC_ENT_EM1:
             html_len = strlen(ldoc_cnst_html_em1_opn) + strlen(ent->pld.str) + strlen(ldoc_cnst_html_em1_cls) + 1;
             html = (char*)malloc(html_len + 1);
@@ -863,6 +872,13 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
         // TODO Check why val_len is one larger than required (???) some times.
         switch (ent->tpe)
         {
+            case LDOC_ENT_BL:
+                if (ent->pld.bl)
+                    val = strdup(ldoc_cnst_json_true);
+                else
+                    val = strdup(ldoc_cnst_json_false);
+                val_len = strlen(val);
+                break;
             case LDOC_ENT_NUM:
                 val_len = strlen(ent->pld.str);
                 val = strdup(ent->pld.str);
@@ -927,6 +943,12 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     else
         switch (ent->tpe)
         {
+            case LDOC_ENT_BL:
+                lbl_len = strlen(ldoc_cnst_json_bl) + 5 + 1;
+                lbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_bl, (unsigned long long)ent);
+                break;
             case LDOC_ENT_EM1:
                 lbl_len = strlen(ldoc_cnst_json_em1) + 20 + 1;
                 lbl = (char*)malloc(lbl_len);
@@ -1088,6 +1110,12 @@ PyObject* ldoc_vis_ent_py_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
         // TODO Check why val_len is one larger than required (???) some times.
         switch (ent->tpe)
         {
+            case LDOC_ENT_BL:
+                if (ent->pld.bl)
+                    val = Py_True;
+                else
+                    val = Py_False;
+                break;
             case LDOC_ENT_NUM:
                 if (ldoc_isfloat(ent->pld.str))
                     val = PyFloat_FromDouble(strtod(ent->pld.str, NULL));
@@ -1121,6 +1149,8 @@ ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coor
         else
             ser = ldoc_ser_new(LDOC_SER_PY_INT);
     }
+    else if (ent->tpe == LDOC_ENT_BL)
+        ser = ldoc_ser_new(LDOC_SER_PY_BL);
     else
         ser = ldoc_ser_new(LDOC_SER_PY_STR);
     
@@ -1147,6 +1177,16 @@ ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coor
     else
         switch (ent->tpe)
         {
+            case LDOC_ENT_BL:
+                lbl_len = strlen(ldoc_cnst_json_bl) + 17 + 1;
+                clbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_bl, (unsigned long long)ent);
+                
+                lbl = PyUnicode_FromString(clbl);
+                
+                free(clbl);
+                break;
             case LDOC_ENT_EM1:
                 lbl_len = strlen(ldoc_cnst_json_em1) + 17 + 1;
                 clbl = (char*)malloc(lbl_len);
