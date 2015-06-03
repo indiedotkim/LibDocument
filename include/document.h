@@ -16,6 +16,8 @@
 #include <string.h>
 #include <sys/queue.h>
 
+#include <Python.h>
+
 #include "trie.h"
 
 #ifdef __cplusplus
@@ -87,6 +89,15 @@ typedef struct ldoc_doc_anno_t
     ldoc_anno_pld_t dtm;
     ldoc_anno_pld_t anno;
 } ldoc_doc_anno_t;
+    
+/**
+ *
+ */
+typedef struct ldoc_py_t
+{
+    PyObject* dtm;
+    PyObject* anno;
+} ldoc_py_t;
 
 /**
  *
@@ -96,16 +107,29 @@ typedef union
     char* str;
     ldoc_raw_t raw;
     ldoc_doc_anno_t pair;
+    ldoc_py_t py;
 } ldoc_pld_t;
+    
+typedef enum
+{
+    LDOC_SER_CSTR,
+    LDOC_SER_PY_INT,
+    LDOC_SER_PY_BL,
+    LDOC_SER_PY_FLT,
+    LDOC_SER_PY_STR,
+    LDOC_SER_PY_LST,
+    LDOC_SER_PY_DCT
+} ldoc_serpld_t;
     
 /**
  *
  */
-typedef union
+typedef struct ldoc_ser_t
 {
-    ldoc_pld_t sclr;
+    ldoc_serpld_t tpe;
+    ldoc_pld_t pld;
 } ldoc_ser_t;
-
+    
 /**
  * @brief TODO
  *
@@ -265,6 +289,13 @@ extern ldoc_pos_t* LDOC_POS_NULL;
 extern ldoc_nde_t* LDOC_NDE_NULL;
 extern ldoc_ent_t* LDOC_ENT_NULL;
 extern ldoc_doc_anno_t LDOC_ANNO_NULL;
+
+char* ldoc_py2str(PyObject* obj);
+    
+/**
+ * @brief Allocates a new serialization structure.
+ */
+ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe);
 
 /**
  * @brief Allocates a new node visitor data structure.
@@ -429,6 +460,10 @@ ldoc_pos_t* ldoc_find_pos(ldoc_doc_t* doc, uint64_t off);
  */
 ldoc_pos_t* ldoc_find_kw(ldoc_doc_t* doc, uint64_t off, char* str);
 
+//
+// HTML
+//
+
 /**
  * @brief TODO
  */
@@ -458,6 +493,10 @@ ldoc_ser_t* ldoc_vis_nde_post_html(ldoc_nde_t* nde, ldoc_coord_t* coord);
  * @brief TODO
  */
 ldoc_ser_t* ldoc_vis_ent_html(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
+
+//
+// JSON
+//
     
 /**
  * @brief TODO
@@ -488,6 +527,40 @@ ldoc_ser_t* ldoc_vis_nde_post_json(ldoc_nde_t* nde, ldoc_coord_t* coord);
  * @brief TODO
  */
 ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
+    
+//
+// Python
+//
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_setup_py(void);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_teardown_py(void);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_pre_py(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_infx_py(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_nde_post_py(ldoc_nde_t* nde, ldoc_coord_t* coord);
+
+/**
+ * @brief TODO
+ */
+ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord);
 
 #ifdef __cplusplus
 } /* extern "C" */

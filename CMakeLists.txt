@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(libdocument VERSION 0.0.1 LANGUAGES C CXX)
 
+set(PYTHON_VERSION "3.4")
+set(PYTHON_PATCH "3")
+set(PYTHON_SUFFIX "m")
+
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # Sources of LibDocument:
@@ -33,6 +37,15 @@ ExternalProject_Add(libbson-lib
     CONFIGURE_COMMAND /usr/bin/env bash -l ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson/autogen.sh
     BUILD_COMMAND ${MAKE})
 
+ExternalProject_Add(python
+    HG_REPOSITORY https://hg.python.org/cpython
+    HG_TAG v${PYTHON_VERSION}.${PYTHON_PATCH}
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
+    BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
+    CONFIGURE_COMMAND ./configure
+    BUILD_COMMAND ${MAKE}
+    INSTALL_COMMAND true)
+
 # Dependency googletest -- note that SOURCE_DIR and BINARY_DIR are the same:
 ExternalProject_Add(googletest-lib
     SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk
@@ -62,6 +75,10 @@ include_directories(src/googletest/include)
 
 link_directories(lib)
 
+add_library(libpython-static STATIC IMPORTED)
+set_target_properties(libpython-static PROPERTIES
+    IMPORTED_LOCATION src/python/libpython${PYTHON_VERSION}${PYTHON_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
+
 add_library(document SHARED ${libdocument_SRC})
 
 add_library(document-static STATIC ${libdocument_SRC})
@@ -72,7 +89,13 @@ set_target_properties(document-static PROPERTIES
     IMPORT_LOCATION lib/${CMAKE_CFG_INTDIR}/libdocument${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 # Make sure headers are visible to the example executable below:
-include_directories(src/lib src/libbson/src/bson libbson-lib-prefix/src/libbson-lib-build/src/bson)
+include_directories(src/lib src/libbson/src/bson libbson-lib-prefix/src/libbson-lib-build/src/bson src/python src/python/Include)
+
+# Dependencies:
+add_dependencies(document-static libpython-static)
+
+# Library linking:
+target_link_libraries(document-static libpython-static)
 
 # Executables:
 add_executable(libdocument-ex1 src/examples/ex1.c)

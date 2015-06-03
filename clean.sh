@@ -19,6 +19,7 @@ rm -rf CMakeCache.txt \
        libdocument.build \
        libdocument.xcodeproj \
        libbson-lib-prefix \
+       python-lib-prefix \
        googletest-lib-prefix \
        CMakeScripts \
        src/doxygen \

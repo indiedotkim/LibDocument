@@ -58,6 +58,41 @@ static const char* ldoc_cnst_json_null = "null";
 static const char* ldoc_cnst_json_cls = "}";
 static const char* ldoc_cnst_json_lcls = "]";
 
+char* ldoc_py2str(PyObject* obj)
+{
+    PyObject* str = PyObject_Str(obj);
+    
+    char* s = PyUnicode_AsUTF8(str);
+    
+    Py_DECREF(str);
+    
+    return s;
+}
+
+static inline bool ldoc_isfloat(char* str)
+{
+    bool flt = false;
+    
+    while (*str)
+    {
+        if (*(str++) == '.')
+            return true;
+    }
+    
+    return flt;
+}
+
+inline ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe)
+{
+    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    
+    // TODO Error handling.
+    
+    ser->tpe = tpe;
+    
+    return ser;
+}
+
 static inline ldoc_nde_t* ldoc_nde_new_(ldoc_struct_t tpe)
 {
     ldoc_nde_t* nde = (ldoc_nde_t*)malloc(sizeof(ldoc_nde_t));
@@ -79,26 +114,99 @@ static inline ldoc_nde_t* ldoc_nde_new_(ldoc_struct_t tpe)
     return nde;
 }
 
+static inline void ldoc_ser_concat_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
+{
+    size_t len2 = strlen(ser2->pld.str);
+    
+    // Nothing to concatenate:
+    if (!len2)
+        return;
+    
+    size_t len1 = strlen(ser1->pld.str);
+    size_t len = len1 + len2 + 1;
+    
+    ser1->pld.str = realloc(ser1->pld.str, len);
+    
+    strncat(ser1->pld.str, ser2->pld.str, len2);
+}
+
+static inline void ldoc_ser_concat_py_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
+{
+    PyObject* ccat = PyUnicode_Concat(ser1->pld.py.dtm, ser1->pld.py.dtm);
+    
+    ser1->pld.py.dtm = ccat;
+}
+
+static inline void ldoc_ser_concat_py_dct(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
+{
+    switch (ser2->tpe)
+    {
+        case LDOC_SER_PY_BL:
+        case LDOC_SER_PY_FLT:
+        case LDOC_SER_PY_STR:
+        case LDOC_SER_PY_DCT:
+        case LDOC_SER_PY_LST:
+            PyDict_SetItem(ser1->pld.py.dtm, ser2->pld.py.anno, ser2->pld.py.dtm);
+            break;
+        default:
+            // TODO Internal error.
+            break;
+    }
+}
+
+static inline void ldoc_ser_concat_py_lst(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
+{
+    switch (ser2->tpe)
+    {
+        case LDOC_SER_PY_BL:
+        case LDOC_SER_PY_FLT:
+        case LDOC_SER_PY_STR:
+        case LDOC_SER_PY_DCT:
+        case LDOC_SER_PY_LST:
+            PyList_Append(ser1->pld.py.dtm, ser2->pld.py.dtm);
+            break;
+        default:
+            // TODO Internal error.
+            break;
+    }
+}
+
 void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
     // Nothing to concatenate:
-    if (!ser2)
+    if (ser2 == LDOC_SER_NULL)
         return;
     
     // TODO Only strings supported right now.
     
-    size_t len2 = strlen(ser2->sclr.str);
-    
-    // Again, nothing to concatenate:
-    if (!len2)
-        return;
-    
-    size_t len1 = strlen(ser1->sclr.str);
-    size_t len = len1 + len2 + 1;
-    
-    ser1->sclr.str = realloc(ser1->sclr.str, len);
-    
-    strncat(ser1->sclr.str, ser2->sclr.str, len2);
+    switch (ser1->tpe)
+    {
+        case LDOC_SER_PY_BL:
+        case LDOC_SER_PY_FLT:
+        case LDOC_SER_PY_INT:
+            // Things that cannot be concatenated.
+            
+            // TODO Internal error.
+            
+            break;
+        case LDOC_SER_PY_STR:
+            if (ser2->tpe == LDOC_SER_PY_STR)
+                ldoc_ser_concat_py_str(ser1, ser2);
+            else
+            {
+                // TODO Internal error. Second object is not a string.
+            }
+        case LDOC_SER_PY_DCT:
+            ldoc_ser_concat_py_dct(ser1, ser2);
+            break;
+        case LDOC_SER_PY_LST:
+            ldoc_ser_concat_py_lst(ser1, ser2);
+            break;
+        case LDOC_SER_CSTR:
+            return ldoc_ser_concat_str(ser1, ser2);
+        default:
+            break;
+    }
 }
 
 ldoc_pos_t* ldoc_pos_new(ldoc_nde_t* nde, uint64_t nde_off, uint64_t off)
@@ -467,14 +575,14 @@ static inline void ldoc_strcat(ldoc_ser_t* ser, char* s1)
     else
         len1 = strlen(s1);
     
-    ser->sclr.str = (char*)malloc(len1 + 1);
+    ser->pld.str = (char*)malloc(len1 + 1);
     
     // If you do not know why the next line needs to be there, then
     // you have not read the man page of strncpy.
-    ser->sclr.str[len1] = 0;
+    ser->pld.str[len1] = 0;
     
     if (len1)
-        strncpy(ser->sclr.str, s1, len1);
+        strncpy(ser->pld.str, s1, len1);
 }
 
 static inline void ldoc_strcat2(ldoc_ser_t* ser, char* s1, char* s2)
@@ -482,13 +590,13 @@ static inline void ldoc_strcat2(ldoc_ser_t* ser, char* s1, char* s2)
     size_t len1 = strlen(s1);
     size_t len2 = strlen(s2);
 
-    ser->sclr.str = (char*)malloc(len1 + len2 + 1);
+    ser->pld.str = (char*)malloc(len1 + len2 + 1);
     
     // If you do not know why the next line needs to be there, then
     // you have not read the man page of strncpy.
-    ser->sclr.str[len1] = 0;
-    strncpy(ser->sclr.str, s1, len1);
-    strncat(ser->sclr.str, s2, len2);
+    ser->pld.str[len1] = 0;
+    strncpy(ser->pld.str, s1, len1);
+    strncat(ser->pld.str, s2, len2);
 }
 
 static inline void ldoc_strcat3(ldoc_ser_t* ser, char* s1, char* s2, char* s3)
@@ -496,41 +604,41 @@ static inline void ldoc_strcat3(ldoc_ser_t* ser, char* s1, char* s2, char* s3)
     size_t len1 = strlen(s1);
     size_t len2 = strlen(s2);
     size_t len3 = strlen(s3);
-    ser->sclr.str = (char*)malloc(len1 + len2 + len3 + 1);
+    ser->pld.str = (char*)malloc(len1 + len2 + len3 + 1);
 
     // If you do not know why the next line needs to be there, then
     // you have not read the man page of strncpy.
-    ser->sclr.str[len1] = 0;
-    strncpy(ser->sclr.str, s1, len1);
-    strncat(ser->sclr.str, s2, len2);
-    strncat(ser->sclr.str, s3, len3);
+    ser->pld.str[len1] = 0;
+    strncpy(ser->pld.str, s1, len1);
+    strncat(ser->pld.str, s2, len2);
+    strncat(ser->pld.str, s3, len3);
 }
 
 ldoc_ser_t* ldoc_vis_ent_html(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord)
 {
     // TODO Only strings supported right now.
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
-    ser->sclr.str = ldoc_cnv_ent_html(ent);
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
+    ser->pld.str = ldoc_cnv_ent_html(ent);
     
     return ser;
 }
 
 ldoc_ser_t* ldoc_vis_setup_html(void)
 {
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
-    ser->sclr.str = (char*)malloc(strlen(ldoc_cnst_html_doc_opn) + 1);
-    strcpy(ser->sclr.str, ldoc_cnst_html_doc_opn);
+    ser->pld.str = (char*)malloc(strlen(ldoc_cnst_html_doc_opn) + 1);
+    strcpy(ser->pld.str, ldoc_cnst_html_doc_opn);
     
     return ser;
 }
 
 ldoc_ser_t* ldoc_vis_teardown_html(void)
 {
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
-    ser->sclr.str = (char*)malloc(strlen(ldoc_cnst_html_doc_cls) + 1);
-    strcpy(ser->sclr.str, ldoc_cnst_html_doc_cls);
+    ser->pld.str = (char*)malloc(strlen(ldoc_cnst_html_doc_cls) + 1);
+    strcpy(ser->pld.str, ldoc_cnst_html_doc_cls);
     
     return ser;
 }
@@ -545,7 +653,7 @@ ldoc_ser_t* ldoc_vis_nde_pre_html(ldoc_nde_t* nde, ldoc_coord_t* coord)
     
     char* html = ldoc_cnv_nde_html_opn(nde);
     
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     ldoc_strcat2(ser, idnt, html);
     
     return ser;
@@ -564,7 +672,7 @@ static ldoc_ser_t* ldoc_vis_nde_cls_html(ldoc_nde_t* nde, ldoc_coord_t* coord, b
     
     char* html = ldoc_cnv_nde_html_cls(nde);
     
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
     if (idnt)
         ldoc_strcat2(ser, idnt, html);
@@ -609,20 +717,20 @@ ldoc_ser_t* ldoc_vis_nde_post_html(ldoc_nde_t* nde, ldoc_coord_t* coord)
 
 ldoc_ser_t* ldoc_vis_setup_json(void)
 {
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
-    ser->sclr.str = (char*)malloc(strlen(ldoc_cnst_json_opn) + 1);
-    strcpy(ser->sclr.str, ldoc_cnst_json_opn);
+    ser->pld.str = (char*)malloc(strlen(ldoc_cnst_json_opn) + 1);
+    strcpy(ser->pld.str, ldoc_cnst_json_opn);
     
     return ser;
 }
 
 ldoc_ser_t* ldoc_vis_teardown_json(void)
 {
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
-    ser->sclr.str = (char*)malloc(strlen(ldoc_cnst_json_cls) + 1);
-    strcpy(ser->sclr.str, ldoc_cnst_json_cls);
+    ser->pld.str = (char*)malloc(strlen(ldoc_cnst_json_cls) + 1);
+    strcpy(ser->pld.str, ldoc_cnst_json_cls);
     
     return ser;
 }
@@ -633,11 +741,11 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     
     if (!coord->lvl)
     {
-        ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+        ser = ldoc_ser_new(LDOC_SER_CSTR);
         
         // TODO Error handling.
         
-        ser->sclr.str = (char*)calloc(1, 1);
+        ser->pld.str = (char*)calloc(1, 1);
         
         // TODO Error handling.
         
@@ -679,21 +787,21 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     else
         opn = ldoc_cnst_json_opn;
     
-    ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ser = ldoc_ser_new(LDOC_SER_CSTR);
     size_t ser_len = strlen(lbl) + 5 + 1;
     
     //if (nde->prnt->tpe == LDOC_NDE_OL)
     //    ser_len++;
     
-    ser->sclr.str = (char*)malloc(ser_len + 1);
+    ser->pld.str = (char*)malloc(ser_len + 1);
     
     // TODO Error handling.
     
     // If we are in an ordered list, then do not include a node's label:
     if (nde->prnt->tpe == LDOC_NDE_OL)
-        snprintf(ser->sclr.str, ser_len, "%s%s", sep, opn);
+        snprintf(ser->pld.str, ser_len, "%s%s", sep, opn);
     else
-        snprintf(ser->sclr.str, ser_len, "%s\"%s\":%s", sep, lbl, opn);
+        snprintf(ser->pld.str, ser_len, "%s\"%s\":%s", sep, lbl, opn);
     
     return ser;
 }
@@ -720,21 +828,21 @@ ldoc_ser_t* ldoc_vis_nde_post_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
         json = strdup(ldoc_cnst_json_cls);
     }
     
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
     if (nde->prnt && nde->prnt->tpe == LDOC_NDE_OL)
     {
         size_t clen = strlen(json) + 1;
-        ser->sclr.str = (char*)malloc(clen + 1);
+        ser->pld.str = (char*)malloc(clen + 1);
         
         // TODO Error handling.
         
-        snprintf(ser->sclr.str, clen, "%s", json);
+        snprintf(ser->pld.str, clen, "%s", json);
         
         free(json);
     }
     else
-        ser->sclr.str = json;
+        ser->pld.str = json;
     
     return ser;
 }
@@ -791,7 +899,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     size_t json_len;
     char* json = ldoc_vis_ent_json_val(ent, coord, &json_len);
     
-    ldoc_ser_t* ser = (ldoc_ser_t*)malloc(sizeof(ldoc_ser_t));
+    ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
     
     if (!ser)
     {
@@ -871,24 +979,237 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     
     size_t clen = lbl_len_act + json_len + (coord->pln ? 1 : 0);
     
-    ser->sclr.str = (char*)malloc(clen + 1);
+    ser->pld.str = (char*)malloc(clen + 1);
     
     if (coord->pln)
     {
-        ser->sclr.str[0] = ',';
-        strncpy(&ser->sclr.str[1], lbl, lbl_len_act);
-        strncpy(&ser->sclr.str[lbl_len_act + 1], json, json_len);
-        ser->sclr.str[clen] = 0;
+        ser->pld.str[0] = ',';
+        strncpy(&ser->pld.str[1], lbl, lbl_len_act);
+        strncpy(&ser->pld.str[lbl_len_act + 1], json, json_len);
+        ser->pld.str[clen] = 0;
     }
     else
     {
-        strncpy(&ser->sclr.str[0], lbl, lbl_len_act);
-        strncpy(&ser->sclr.str[lbl_len_act], json, json_len);
-        ser->sclr.str[clen] = 0;
+        strncpy(&ser->pld.str[0], lbl, lbl_len_act);
+        strncpy(&ser->pld.str[lbl_len_act], json, json_len);
+        ser->pld.str[clen] = 0;
     }
     
     return ser;
 }
+
+//
+// Python
+//
+
+ldoc_ser_t* ldoc_vis_setup_py(void)
+{
+    return LDOC_SER_NULL;
+}
+
+ldoc_ser_t* ldoc_vis_teardown_py(void)
+{
+    return LDOC_SER_NULL;
+}
+
+ldoc_ser_t* ldoc_vis_nde_pre_py(ldoc_nde_t* nde, ldoc_coord_t* coord)
+{
+    ldoc_ser_t* ser;
+    
+    if (!coord->lvl)
+    {
+        ser = ldoc_ser_new(LDOC_SER_PY_DCT);
+        
+        ser->pld.py.anno = NULL;
+        ser->pld.py.dtm = PyDict_New();
+        
+        return ser;
+    }
+    
+    PyObject* lbl;
+    
+    if (nde->prnt->tpe == LDOC_NDE_OL)
+    {
+        lbl = NULL;
+    }
+    else if (nde->mkup.anno.str != NULL)
+    {
+        lbl = PyUnicode_FromString(nde->mkup.anno.str);
+    }
+    else
+    {
+        size_t lbl_len = strlen(ldoc_cnst_json_nde) + 17;
+        char* clbl = (char*)malloc(lbl_len + 1);
+        snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_nde, (unsigned long long)nde);
+        
+        lbl = PyUnicode_FromString(clbl);
+        
+        free(clbl);
+    }
+
+    if (nde->tpe == LDOC_NDE_OL)
+        ser = ldoc_ser_new(LDOC_SER_PY_LST);
+    else
+        ser = ldoc_ser_new(LDOC_SER_PY_DCT);
+    
+    // TODO Error handling.
+    
+    ser->pld.py.anno = lbl;
+    
+    if (nde->tpe == LDOC_NDE_OL)
+        ser->pld.py.dtm = PyList_New(0);
+    else
+        ser->pld.py.dtm = PyDict_New();
+    
+    return ser;
+}
+
+ldoc_ser_t* ldoc_vis_nde_infx_py(ldoc_nde_t* nde, ldoc_coord_t* coord)
+{
+    return LDOC_SER_NULL;
+}
+
+ldoc_ser_t* ldoc_vis_nde_post_py(ldoc_nde_t* nde, ldoc_coord_t* coord)
+{
+    return LDOC_SER_NULL;
+}
+
+PyObject* ldoc_vis_ent_py_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
+{
+    PyObject* val;
+    
+    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
+    {
+        val = Py_None;
+    }
+    else
+        // TODO Check why val_len is one larger than required (???) some times.
+        switch (ent->tpe)
+        {
+            case LDOC_ENT_NUM:
+                if (ldoc_isfloat(ent->pld.str))
+                    val = PyFloat_FromDouble(strtod(ent->pld.str, NULL));
+                else
+                    val = PyLong_FromLong(strtol(ent->pld.str, NULL, 10));
+                break;
+            case LDOC_ENT_NR:
+                val = PyLong_FromLong(strtol(ent->pld.pair.dtm.str, NULL, 10));
+                break;
+            case LDOC_ENT_OR:
+                val = PyUnicode_FromString(ent->pld.pair.dtm.str);
+                break;
+            default:
+                val = PyUnicode_FromString(ent->pld.str);
+                break;
+        }
+    
+    return val;
+}
+
+ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord)
+{
+    PyObject* json = ldoc_vis_ent_py_val(ent, coord, NULL);
+    
+    ldoc_ser_t* ser;
+    
+    if (ent->tpe == LDOC_ENT_NUM)
+    {
+        if (ldoc_isfloat(ent->pld.str))
+            ser = ldoc_ser_new(LDOC_SER_PY_FLT);
+        else
+            ser = ldoc_ser_new(LDOC_SER_PY_INT);
+    }
+    else
+        ser = ldoc_ser_new(LDOC_SER_PY_STR);
+    
+    if (!ser)
+    {
+        // TODO Error handling.
+    }
+    
+    size_t lbl_len;
+    char* clbl;
+    PyObject* lbl = NULL;
+    if (nde->tpe == LDOC_NDE_OL)
+        switch (ent->tpe)
+        {
+            case LDOC_ENT_NR:
+            case LDOC_ENT_OR:
+                ser->pld.py.anno = PyUnicode_FromString(ent->pld.pair.anno.str);
+                ser->pld.py.dtm = json;
+                
+                return ser;
+            default:
+                break;
+        }
+    else
+        switch (ent->tpe)
+        {
+            case LDOC_ENT_EM1:
+                lbl_len = strlen(ldoc_cnst_json_em1) + 17 + 1;
+                clbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_em1, (unsigned long long)ent);
+                
+                lbl = PyUnicode_FromString(clbl);
+                
+                free(clbl);
+                break;
+            case LDOC_ENT_EM2:
+                lbl_len = strlen(ldoc_cnst_json_em2) + 17 + 1;
+                clbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_em2, (unsigned long long)ent);
+                
+                lbl = PyUnicode_FromString(clbl);
+                
+                free(clbl);
+                break;
+            case LDOC_ENT_NUM:
+                lbl_len = strlen(ldoc_cnst_json_num) + 17 + 1;
+                clbl = (char*)malloc(lbl_len);
+                // TODO Error handling.
+                snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_num, (unsigned long long)ent);
+                
+                lbl = PyUnicode_FromString(clbl);
+                
+                free(clbl);
+                break;
+            case LDOC_ENT_NR:
+            case LDOC_ENT_OR:
+                lbl = PyUnicode_FromString(ent->pld.pair.anno.str);
+                break;
+            case LDOC_ENT_REF:
+                // TODO
+                break;
+            case LDOC_ENT_TXT:
+                lbl_len = strlen(ldoc_cnst_json_txt) + 18; // TODO Why is this 18 when everything else is +17?
+                clbl = (char*)malloc(lbl_len + 1);
+                // TODO Error handling.
+                snprintf(clbl, lbl_len, "%s-%llx", ldoc_cnst_json_txt, (unsigned long long)ent);
+                
+                lbl = PyUnicode_FromString(clbl);
+                
+                free(clbl);
+                break;
+            case LDOC_ENT_URI:
+                // TODO
+                break;
+            default:
+                // TODO Error handling.
+                lbl = NULL;
+                break;
+        }
+    
+    ser->pld.py.anno = lbl;
+    ser->pld.py.dtm = json;
+    
+    return ser;
+}
+
+////
 
 ldoc_ser_t* ldoc_vis_dmp(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord)
 {
@@ -1216,7 +1537,13 @@ ldoc_ser_t* ldoc_format(ldoc_doc_t* doc, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_e
     
     ldoc_ser_t* cls = vis_nde->vis_teardown();
     
-    ldoc_ser_concat(opn, ser);
+    // Opening can be omitted, in which case the root node serialization will
+    // start the serialization:
+    if (opn == LDOC_SER_NULL)
+        opn = ser;
+    else
+        ldoc_ser_concat(opn, ser);
+    
     ldoc_ser_concat(opn, cls);
     
     return opn;
@@ -1281,7 +1608,7 @@ ldoc_trie_nde_arr_t* ldoc_find_mtchs(ldoc_doc_t* doc, uint64_t off, ldoc_trie_t*
     
     ldoc_ser_t* ser = ldoc_lkahead(doc, off, trie->max);
     
-    ldoc_trie_lookup(trie, ser->sclr.str, false);
+    ldoc_trie_lookup(trie, ser->pld.str, false);
     
     return NULL;
 }

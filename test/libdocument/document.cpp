@@ -1,4 +1,4 @@
-    /*
+/*
  * Copyright (c) 2015 CODAMONO, Ontario, Canada
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -377,7 +377,7 @@ TEST(ldoc_document, format_html)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    printf("%s", ser->sclr.str);
+    printf("%s", ser->pld.str);
     
     ldoc_doc_free(doc);
 }
@@ -398,7 +398,7 @@ TEST(ldoc_document, format_json)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    printf("%s\n", ser->sclr.str);
+    printf("%s\n", ser->pld.str);
     
     ldoc_doc_free(doc);
 }
@@ -433,7 +433,7 @@ TEST(ldoc_document, format_json_custom_ids)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"NID\":{\"CID\":\"data\"}}", ser->sclr.str);
+    EXPECT_STREQ("{\"NID\":{\"CID\":\"data\"}}", ser->pld.str);
     
     ldoc_doc_free(doc);
 }
@@ -478,7 +478,7 @@ TEST(ldoc_document, format_json_null)
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
     // Count number of "null" occurrences (without the quotes):
-    char* str = ser->sclr.str;
+    char* str = ser->pld.str;
     uint32_t null_cnt = 0;
     while (*str)
     {
@@ -531,7 +531,7 @@ TEST(ldoc_document, format_json_references)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ(ldoc_ref_json, ser->sclr.str);
+    EXPECT_STREQ(ldoc_ref_json, ser->pld.str);
     
     ldoc_doc_free(doc);
 }
@@ -553,7 +553,7 @@ TEST(ldoc_document, format_json_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"List 1\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}],\"List 2\":[[{\"Key 4.1\":\"Value 4.1\"}]]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\",\"Entity 2\",{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}],\"List 2\":[[{\"Key 4.1\":\"Value 4.1\"}]]}", ser->pld.str);
     
     ldoc_doc_free(doc);
 }
@@ -575,10 +575,86 @@ TEST(ldoc_document, format_json_multiple_lists)
     
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     
-    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}]}", ser->sclr.str);
+    EXPECT_STREQ("{\"List 1\":[\"Entity 1\"],\"List 2\":[\"Entity 2\"],\"List 3\":[{\"Entity 3 (key)\":\"Entity 3 (value)\"},{\"Key 1\":\"Value 1\"},{\"Key 2.1\":\"Value 2.1\",\"Key 2.2\":\"Value 2.2\"},{}]}", ser->pld.str);
     
     ldoc_doc_free(doc);
 }
+
+//
+// Python
+//
+
+TEST(ldoc_document, format_py)
+{
+    ldoc_doc_t* doc = ldoc_big_doc();
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_py;
+    vis_nde->vis_teardown = ldoc_vis_teardown_py;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_py);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_py);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_py);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_py);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    EXPECT_NE(LDOC_SER_NULL, ser);
+    EXPECT_EQ(LDOC_SER_PY_DCT, ser->tpe);
+    EXPECT_EQ((PyObject*)NULL, ser->pld.py.anno);
+    EXPECT_NE((PyObject*)NULL, ser->pld.py.dtm);
+    
+    Py_Initialize();
+    
+    char* s = ldoc_py2str(ser->pld.py.dtm);
+    EXPECT_NE((char*)NULL, s);
+    EXPECT_NE(0, strlen(s));
+    
+    printf("%s\n", s);
+    
+    Py_Finalize();
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, format_py_multiple_lists)
+{
+    ldoc_doc_t* doc = ldoc_mul_ord_doc();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_py;
+    vis_nde->vis_teardown = ldoc_vis_teardown_py;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_py);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_py);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_py);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_py);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    EXPECT_NE(LDOC_SER_NULL, ser);
+    EXPECT_EQ(LDOC_SER_PY_DCT, ser->tpe);
+    EXPECT_EQ((PyObject*)NULL, ser->pld.py.anno);
+    EXPECT_NE((PyObject*)NULL, ser->pld.py.dtm);
+    
+    Py_Initialize();
+    
+    char* s = ldoc_py2str(ser->pld.py.dtm);
+    EXPECT_NE((char*)NULL, s);
+    EXPECT_NE(0, strlen(s));
+    
+    // Ordering of keys changes in Python, so only do a superficial check here:
+    EXPECT_EQ(156, strlen(s));
+    
+    printf("%s\n", s);
+    
+    Py_Finalize();
+    
+    ldoc_doc_free(doc);
+}
+
+////
 
 TEST(ldoc_document, find_by_position)
 {
