@@ -290,6 +290,9 @@ extern ldoc_nde_t* LDOC_NDE_NULL;
 extern ldoc_ent_t* LDOC_ENT_NULL;
 extern ldoc_doc_anno_t LDOC_ANNO_NULL;
 
+/*
+ * @brief Returns a string representation of a Python object (Python call "str(obj)").
+ */
 char* ldoc_py2str(PyObject* obj);
     
 /**
