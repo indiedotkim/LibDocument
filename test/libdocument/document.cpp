@@ -654,6 +654,61 @@ TEST(ldoc_document, format_py_multiple_lists)
     ldoc_doc_free(doc);
 }
 
+TEST(ldoc_document, py_import)
+{
+    Py_Initialize();
+    
+    PyObject* nme = PyUnicode_FromString("testpy.test");
+    PyObject* mod = PyImport_Import(nme);
+    Py_DECREF(nme);
+    
+    if (!mod)
+    {
+        // TODO Error handling.
+    }
+    
+    PyObject* fn = PyObject_GetAttrString(mod, "example_dict");
+    
+    if (fn && PyCallable_Check(fn))
+    {
+        PyObject* dict = PyObject_CallObject(fn, NULL);
+        EXPECT_NE((PyObject*)NULL, dict);
+        
+        ldoc_doc_t* doc = ldoc_pydict2doc(dict);
+        EXPECT_NE((ldoc_doc_t*)NULL, doc);
+        
+        ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+        vis_nde->vis_setup = ldoc_vis_setup_json;
+        vis_nde->vis_teardown = ldoc_vis_teardown_json;
+        ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+        ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+        ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+        
+        ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+        ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+        
+        ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+        EXPECT_NE((ldoc_ser_t*)NULL, ser);
+        
+        /* Python returns:
+         { 'a' : True,
+         'b' : 123,
+         'c' : 12.3,
+         'd' : { 'd1' : 'd2', 'd3' : 456 },
+         'e' : [ 'e1', { 'e2' : 'e3' }]
+         }
+         */
+        printf("%s\n", ser->pld.str);
+        
+        // Keys can be of any order in Python; superficial test for now:
+        EXPECT_EQ(75, strlen(ser->pld.str));
+        
+        ldoc_doc_free(doc);
+    }
+    
+    Py_Finalize();
+}
+
 ////
 
 TEST(ldoc_document, find_by_position)

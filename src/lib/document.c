@@ -61,15 +61,211 @@ static const char* ldoc_cnst_json_null = "null";
 static const char* ldoc_cnst_json_cls = "}";
 static const char* ldoc_cnst_json_lcls = "]";
 
+static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict);
+static ldoc_nde_t* ldoc_pydict2doc_lst(PyObject* lbl, PyObject* dict);
+
 char* ldoc_py2str(PyObject* obj)
 {
     PyObject* str = PyObject_Str(obj);
     
-    char* s = PyUnicode_AsUTF8(str);
+    char* s = strdup(PyUnicode_AsUTF8(str));
     
     Py_DECREF(str);
     
     return s;
+}
+
+inline static ldoc_ent_t* ldoc_pydict2doc_str(PyObject* str)
+{
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
+    
+    ent->pld.str = strdup(PyUnicode_AsUTF8(str));
+    
+    return ent;
+}
+
+inline static ldoc_ent_t* ldoc_pydict2doc_num(PyObject* str)
+{
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_NUM);
+    
+    ent->pld.str = strdup(PyUnicode_AsUTF8(PyObject_Str(str)));
+    
+    return ent;
+}
+
+inline static ldoc_ent_t* ldoc_pydict2doc_bl(PyObject* str)
+{
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_BL);
+    
+    if (str == Py_True)
+        ent->pld.bl = true;
+    else
+        ent->pld.bl = false;
+    
+    return ent;
+}
+
+inline static ldoc_ent_t* ldoc_pydict2doc_anno(PyObject* lbl, ldoc_content_t tpe, PyObject* obj)
+{
+    ldoc_ent_t* ent = ldoc_ent_new(tpe);
+    
+    if (lbl)
+    {
+        char* clbl = strdup(PyUnicode_AsUTF8(lbl));
+        ent->pld.pair.anno.str = clbl;
+    }
+    
+    PyObject* tmp;
+    switch (tpe)
+    {
+        case LDOC_ENT_BR:
+            if (obj == Py_True)
+                ent->pld.pair.dtm.bl = true;
+            else
+                ent->pld.pair.dtm.bl = false;
+            break;
+        case LDOC_ENT_NR:
+            tmp = PyObject_Str(obj);
+            ent->pld.pair.dtm.str = strdup(PyUnicode_AsUTF8(tmp));
+            Py_DECREF(tmp);
+            break;
+        case LDOC_ENT_OR:
+            ent->pld.pair.dtm.str = strdup(PyUnicode_AsUTF8(obj));
+            break;
+        default:
+            // TODO Internal error.
+            ent = NULL;
+            break;
+    }
+    
+    return ent;
+}
+
+inline static ldoc_nde_t* ldoc_pydict2doc_lst(PyObject* lbl, PyObject* lst)
+{
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_OL);
+    
+    if (lbl)
+    {
+        char* clbl = strdup(PyUnicode_AsUTF8(lbl));
+        nde->mkup.anno.str = clbl;
+    }
+    
+    Py_ssize_t pos = 0;
+    Py_ssize_t len = PyList_Size(lst);
+
+    PyObject* val;
+    ldoc_ent_t* ent = NULL;
+    ldoc_nde_t* dsc = NULL;
+    while (pos < len)
+    {
+        val = PyList_GetItem(lst, pos++);
+        
+        if (PyDict_CheckExact(val))
+        {
+            dsc = ldoc_pydict2doc_dict(NULL, val);
+            
+            ldoc_nde_dsc_push(nde, dsc);
+        }
+        else if (PyList_CheckExact(val))
+        {
+            dsc = ldoc_pydict2doc_lst(NULL, val);
+            
+            ldoc_nde_dsc_push(nde, dsc);
+        }
+        else if (PyUnicode_CheckExact(val))
+        {
+            ent = ldoc_pydict2doc_str(val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else if (PyLong_CheckExact(val) || PyFloat_CheckExact(val))
+        {
+            ent = ldoc_pydict2doc_num(val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else if (PyBool_Check(val))
+        {
+            ent = ldoc_pydict2doc_bl(val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else
+        {
+            // TODO Passed custom type -- which is not supported.
+        }
+    }
+    
+    return nde;
+}
+
+inline static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict)
+{
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_UA);
+    
+    if (lbl)
+    {
+        char* clbl = strdup(PyUnicode_AsUTF8(lbl));
+        nde->mkup.anno.str = clbl;
+    }
+    
+    PyObject* ky;
+    PyObject* val;
+    Py_ssize_t pos = 0;
+    
+    ldoc_ent_t* ent = NULL;
+    ldoc_nde_t* dsc = NULL;
+    while (PyDict_Next(dict, &pos, &ky, &val))
+    {
+        if (PyDict_CheckExact(val))
+        {
+            dsc = ldoc_pydict2doc_dict(ky, val);
+            
+            ldoc_nde_dsc_push(nde, dsc);
+        }
+        else if (PyList_CheckExact(val))
+        {
+            dsc = ldoc_pydict2doc_lst(ky, val);
+            
+            ldoc_nde_dsc_push(nde, dsc);
+        }
+        else if (PyUnicode_CheckExact(val))
+        {
+            ent = ldoc_pydict2doc_anno(ky, LDOC_ENT_OR, val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else if (PyLong_CheckExact(val) || PyFloat_CheckExact(val))
+        {
+            ent = ldoc_pydict2doc_anno(ky, LDOC_ENT_NR, val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else if (PyBool_Check(val))
+        {
+            ent = ldoc_pydict2doc_anno(ky, LDOC_ENT_BR, val);
+            
+            ldoc_nde_ent_push(nde, ent);
+        }
+        else
+        {
+            // TODO Passed custom type -- which is not supported.
+        }
+    }
+    
+    return nde;
+}
+
+ldoc_doc_t* ldoc_pydict2doc(PyObject* dict)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    
+    free(doc->rt);
+    doc->rt = ldoc_pydict2doc_dict(NULL, dict);
+    doc->rt->tpe = LDOC_NDE_RT;
+    
+    return doc;
 }
 
 static inline bool ldoc_isfloat(char* str)
@@ -314,6 +510,7 @@ void ldoc_vis_nde_uni(ldoc_vis_nde_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nd
 void ldoc_vis_ent_uni(ldoc_vis_ent_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord))
 {
     vis->vis_bl = vis_uni;
+    vis->vis_br = vis_uni;
     vis->vis_em1 = vis_uni;
     vis->vis_em2 = vis_uni;
     vis->vis_num = vis_uni;
@@ -330,6 +527,8 @@ static inline ldoc_ser_t* ldoc_vis_ent(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_co
     {
         case LDOC_ENT_BL:
             return vis->vis_bl(nde, ent, coord);
+        case LDOC_ENT_BR:
+            return vis->vis_br(nde, ent, coord);
         case LDOC_ENT_EM1:
             return vis->vis_em1(nde, ent, coord);
         case LDOC_ENT_EM2:
@@ -392,6 +591,9 @@ char* ldoc_cnv_ent_html(ldoc_ent_t* ent)
     
     switch (ent->tpe) {
         case LDOC_ENT_BL:
+            // TODO
+            break;
+        case LDOC_ENT_BR:
             // TODO
             break;
         case LDOC_ENT_EM1:
@@ -861,7 +1063,8 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
     size_t val_len;
     char* val;
     
-    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+    if ((ent->tpe == LDOC_ENT_BR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
         (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
         (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
     {
@@ -874,6 +1077,13 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
         {
             case LDOC_ENT_BL:
                 if (ent->pld.bl)
+                    val = strdup(ldoc_cnst_json_true);
+                else
+                    val = strdup(ldoc_cnst_json_false);
+                val_len = strlen(val);
+                break;
+            case LDOC_ENT_BR:
+                if (ent->pld.pair.dtm.bl)
                     val = strdup(ldoc_cnst_json_true);
                 else
                     val = strdup(ldoc_cnst_json_false);
@@ -927,6 +1137,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     if (nde->tpe == LDOC_NDE_OL)
         switch (ent->tpe)
         {
+            case LDOC_ENT_BR:
             case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 lbl_len = strlen(ent->pld.pair.anno.str) + json_len + 6;
@@ -967,6 +1178,7 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
                 // TODO Error handling.
                 snprintf(lbl, lbl_len, "\"%s-%llx\":", ldoc_cnst_json_num, (unsigned long long)ent);
                 break;
+            case LDOC_ENT_BR:
             case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 lbl_len = strlen(ent->pld.pair.anno.str) + 4;
@@ -1100,7 +1312,8 @@ PyObject* ldoc_vis_ent_py_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
 {
     PyObject* val;
     
-    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+    if ((ent->tpe == LDOC_ENT_BR && !ent->pld.pair.dtm.str) ||
+        (ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
         (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
         (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
     {
@@ -1112,6 +1325,12 @@ PyObject* ldoc_vis_ent_py_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
         {
             case LDOC_ENT_BL:
                 if (ent->pld.bl)
+                    val = Py_True;
+                else
+                    val = Py_False;
+                break;
+            case LDOC_ENT_BR:
+                if (ent->pld.pair.dtm.bl)
                     val = Py_True;
                 else
                     val = Py_False;
@@ -1165,6 +1384,7 @@ ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coor
     if (nde->tpe == LDOC_NDE_OL)
         switch (ent->tpe)
         {
+            case LDOC_ENT_BR:
             case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 ser->pld.py.anno = PyUnicode_FromString(ent->pld.pair.anno.str);
@@ -1217,6 +1437,7 @@ ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coor
                 
                 free(clbl);
                 break;
+            case LDOC_ENT_BR:
             case LDOC_ENT_NR:
             case LDOC_ENT_OR:
                 lbl = PyUnicode_FromString(ent->pld.pair.anno.str);
