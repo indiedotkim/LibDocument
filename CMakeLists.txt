@@ -80,7 +80,8 @@ add_library(libpython-static STATIC IMPORTED)
 set_target_properties(libpython-static PROPERTIES
     IMPORTED_LOCATION src/python/libpython${PYTHON_VERSION}${PYTHON_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-add_library(document SHARED ${libdocument_SRC})
+# TODO Shared library build currently disabled due to linking problems with Python lib (not created at the moment).
+# add_library(document SHARED ${libdocument_SRC})
 
 add_library(document-static STATIC ${libdocument_SRC})
 set_target_properties(document-static PROPERTIES
@@ -103,7 +104,8 @@ target_link_libraries(document-static libpython-static)
 # Executables:
 add_executable(libdocument-ex1 src/examples/ex1.c)
 # Note: removed libbson-lib
-add_dependencies(libdocument-ex1 document-static)
+# TODO: Why do I have to add 'python' and 'libpython-static' here?
+add_dependencies(libdocument-ex1 python libpython-static document-static)
 
 add_executable(tests ${test_SRC})
 add_dependencies(tests document-static googletest-lib)
