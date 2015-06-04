@@ -94,7 +94,7 @@ set_target_properties(document-static PROPERTIES
 include_directories(src/lib src/python src/python/Include)
 
 # Dependencies:
-add_dependencies(document-static libpython-static)
+add_dependencies(document-static python libpython-static)
 
 # Library linking:
 target_link_libraries(document-static libpython-static)
