@@ -108,7 +108,7 @@ add_dependencies(tests document-static googletest-lib)
 # Linking information for executables:
 #
 
-target_link_libraries(libdocument-ex1 document)
+target_link_libraries(libdocument-ex1 document-static)
 
 # As suggested in the googletest README: link libgtest statically:
 add_library(gtest STATIC IMPORTED)
