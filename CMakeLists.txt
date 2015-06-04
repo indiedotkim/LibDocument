@@ -29,13 +29,14 @@ enable_testing()
 
 include(ExternalProject)
 
-ExternalProject_Add(libbson-lib
-    GIT_REPOSITORY https://github.com/mongodb/libbson.git
-    GIT_TAG 1.1.0
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson
-    BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson
-    CONFIGURE_COMMAND /usr/bin/env bash -l ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson/autogen.sh
-    BUILD_COMMAND ${MAKE})
+# Currently not used; might be added again in the future!?
+# ExternalProject_Add(libbson-lib
+#     GIT_REPOSITORY https://github.com/mongodb/libbson.git
+#     GIT_TAG 1.1.0
+#     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson
+#     BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson
+#     CONFIGURE_COMMAND /usr/bin/env bash -l ${CMAKE_CURRENT_SOURCE_DIR}/src/libbson/autogen.sh
+#     BUILD_COMMAND ${MAKE})
 
 ExternalProject_Add(python
     HG_REPOSITORY https://hg.python.org/cpython
@@ -89,7 +90,8 @@ set_target_properties(document-static PROPERTIES
     IMPORT_LOCATION lib/${CMAKE_CFG_INTDIR}/libdocument${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 # Make sure headers are visible to the example executable below:
-include_directories(src/lib src/libbson/src/bson libbson-lib-prefix/src/libbson-lib-build/src/bson src/python src/python/Include)
+# libbson requires this two dirs: src/libbson/src/bson libbson-lib-prefix/src/libbson-lib-build/src/bson
+include_directories(src/lib src/python src/python/Include)
 
 # Dependencies:
 add_dependencies(document-static libpython-static)
@@ -99,7 +101,8 @@ target_link_libraries(document-static libpython-static)
 
 # Executables:
 add_executable(libdocument-ex1 src/examples/ex1.c)
-add_dependencies(libdocument-ex1 libbson-lib)
+# Note: removed libbson-lib
+add_dependencies(libdocument-ex1 document-static)
 
 add_executable(tests ${test_SRC})
 add_dependencies(tests document-static googletest-lib)
