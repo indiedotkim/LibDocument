@@ -491,6 +491,46 @@ TEST(ldoc_document, format_json_null)
     ldoc_doc_free(doc);
 }
 
+TEST(ldoc_document, format_json_bool)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    // True:
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_BR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.pair.anno.str = strdup("true");
+    ent->pld.pair.dtm.bl = true;
+    
+    ldoc_nde_ent_push(doc->rt, ent);
+
+    // False:
+    ent = ldoc_ent_new(LDOC_ENT_BR);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.pair.anno.str = strdup("false");
+    ent->pld.pair.dtm.bl = false;
+    
+    ldoc_nde_ent_push(doc->rt, ent);
+    
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    EXPECT_NE((ldoc_ser_t*)NULL, ser);
+    EXPECT_STREQ("{\"true\":true,\"false\":false}", ser->pld.str);
+    
+    ldoc_doc_free(doc);
+}
+
 TEST(ldoc_document, format_json_references)
 {
     ldoc_doc_t* doc = ldoc_doc_new();

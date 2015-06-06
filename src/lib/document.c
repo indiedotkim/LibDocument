@@ -1063,10 +1063,10 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
     size_t val_len;
     char* val;
     
-    if ((ent->tpe == LDOC_ENT_BR && !ent->pld.pair.dtm.str) ||
-        (ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+    // Note that LDOC_ENT_BR is not in this list: ent->pld.pair.dtm.bl is always either true/false!
+    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
         (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
-        (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
+        (ent->tpe != LDOC_ENT_BR && ent->tpe != LDOC_ENT_OR && !ent->pld.str))
     {
         val_len = strlen(ldoc_cnst_json_null);
         val = strdup(ldoc_cnst_json_null);
