@@ -12,6 +12,7 @@ ldoc_ser_t* LDOC_SER_NULL = NULL;
 ldoc_pos_t* LDOC_POS_NULL = NULL;
 ldoc_nde_t* LDOC_NDE_NULL = NULL;
 ldoc_ent_t* LDOC_ENT_NULL = NULL;
+ldoc_res_t* LDOC_RES_NULL = NULL;
 ldoc_doc_anno_t LDOC_ANNO_NULL = { { NULL }, { NULL } };
 
 static const char* ldoc_cnst_html_doc_opn = "<html>\n  <body>\n";
@@ -63,6 +64,8 @@ static const char* ldoc_cnst_json_lcls = "]";
 
 static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict);
 static ldoc_nde_t* ldoc_pydict2doc_lst(PyObject* lbl, PyObject* dict);
+
+ldoc_res_t* ldoc_find_anno_nde(ldoc_nde_t* nde, char** pth, size_t plen);
 
 char* ldoc_py2str(PyObject* obj)
 {
@@ -279,6 +282,34 @@ static inline bool ldoc_isfloat(char* str)
     }
     
     return flt;
+}
+
+static inline ldoc_res_t* ldoc_srch_new(ldoc_nde_t* nde, ldoc_ent_t* ent)
+{
+    ldoc_res_t* res = (ldoc_res_t*)malloc(sizeof(ldoc_res_t));
+    
+    if (!res)
+    {
+        // TODO Error handling.
+    }
+    
+    if (nde)
+    {
+        res->info.nde = nde;
+        res->nde = true;
+    }
+    else
+    {
+        res->info.ent = ent;
+        res->nde = false;
+    }
+    
+    return res;
+}
+
+inline void ldoc_res_free(ldoc_res_t* res)
+{
+    free(res);
 }
 
 inline ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe)
@@ -1848,6 +1879,78 @@ ldoc_pos_t* ldoc_find_pos_trv(ldoc_nde_t* nde, uint64_t* cur, u_int64_t off)
     }
     
     return LDOC_POS_NULL;
+}
+
+static inline ldoc_res_t* ldoc_find_anno_dsc(ldoc_nde_t* nde, char** pth, size_t plen)
+{
+    ldoc_res_t* res;
+    ldoc_nde_t* dsc;
+    TAILQ_FOREACH(dsc, &(nde->dscs), ldoc_nde_entries)
+    {
+        if (dsc->mkup.anno.str && !strcmp(dsc->mkup.anno.str, *pth))
+        {
+            if (plen > 1)
+            {
+                res = ldoc_find_anno_nde(dsc, &pth[1], plen - 1);
+                
+                if (res != LDOC_RES_NULL)
+                    return res;
+            }
+            else
+                return ldoc_srch_new(dsc, NULL);
+        }
+    }
+    
+    return LDOC_RES_NULL;
+}
+
+inline ldoc_res_t* ldoc_find_anno_ent(ldoc_nde_t* nde, char* leaf)
+{
+    ldoc_ent_t* ent;
+    TAILQ_FOREACH(ent, &(nde->ents), ldoc_ent_entries)
+    {
+        if ((ent->tpe == LDOC_ENT_OR ||
+             ent->tpe == LDOC_ENT_NR ||
+             ent->tpe == LDOC_ENT_BR) &&
+            !strcmp(ent->pld.pair.anno.str, leaf))
+            return ldoc_srch_new(NULL, ent);
+    }
+    
+    return LDOC_RES_NULL;
+}
+
+inline ldoc_res_t* ldoc_find_anno_nde(ldoc_nde_t* nde, char** pth, size_t plen)
+{
+    if (!plen)
+        return LDOC_RES_NULL;
+    
+    ldoc_res_t* res;
+    
+    // If path length is greater than one, then it cannot be an entity
+    // at this level (search only node descendants):
+    if (plen > 1)
+    {
+        res = ldoc_find_anno_dsc(nde, pth, plen);
+    }
+    else
+    {
+        // Note: plen has to be 1 here!
+        
+        // Search entities first, because it is more likely
+        // that the user is looking for a leaf in the document
+        // tree:
+        res = ldoc_find_anno_ent(nde, *pth);
+        
+        if (res == LDOC_RES_NULL)
+            res = ldoc_find_anno_dsc(nde, pth, plen);
+    }
+    
+    return res;
+}
+
+ldoc_res_t* ldoc_find_anno(ldoc_doc_t* doc, char** pth, size_t plen)
+{
+    return ldoc_find_anno_nde(doc->rt, pth, plen);
 }
 
 ldoc_pos_t* ldoc_find_pos(ldoc_doc_t* doc, uint64_t off)

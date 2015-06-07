@@ -361,6 +361,52 @@ TEST(ldoc_document, big_document)
 {
 }
 
+//
+// Search
+//
+
+TEST(ldoc_document, find_annotation)
+{
+    ldoc_doc_t* doc = ldoc_ord_doc();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    size_t plen = 2;
+    const char* pth1[] = { ldoc_ord_doc_hd_1, ldoc_ord_doc_3k };
+    
+    ldoc_res_t* res = ldoc_find_anno(doc, (char**)pth1, plen);
+    EXPECT_NE((ldoc_res_t*)NULL, res);
+    EXPECT_EQ(false, res->nde);
+    EXPECT_EQ(ldoc_ord_doc_3k, res->info.ent->pld.pair.anno.str);
+    EXPECT_EQ(ldoc_ord_doc_3v, res->info.ent->pld.pair.dtm.str);
+
+    ldoc_res_free(res);
+    
+    const char* pth2[] = { ldoc_ord_doc_hd_1, ldoc_ord_doc_4_2 };
+    
+    res = ldoc_find_anno(doc, (char**)pth2, plen);
+    EXPECT_NE((ldoc_res_t*)NULL, res);
+    EXPECT_EQ(true, res->nde);
+    EXPECT_EQ(ldoc_ord_doc_4_2, res->info.nde->mkup.anno.str);
+    
+    ldoc_res_free(res);
+    
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_document, find_by_position)
+{
+    
+}
+
+TEST(ldoc_document, find_by_keyword)
+{
+    
+}
+
+//
+// HTML
+//
+
 TEST(ldoc_document, format_html)
 {
     ldoc_doc_t* doc = ldoc_big_doc();
@@ -748,17 +794,3 @@ TEST(ldoc_document, py_import)
     
     Py_Finalize();
 }
-
-////
-
-TEST(ldoc_document, find_by_position)
-{
-
-}
-
-TEST(ldoc_document, find_by_keyword)
-{
-
-}
-
-

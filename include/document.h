@@ -214,7 +214,25 @@ typedef struct ldoc_pos_t
     uint64_t nde_off;
     uint64_t off;
 } ldoc_pos_t;
-   
+
+/**
+ * @brief Information carrying types in a document: nodes and entities.
+ */
+typedef union
+{
+    ldoc_nde_t* nde;
+    ldoc_ent_t* ent;
+} ldoc_info_t;
+
+/**
+ * @brief Entity or node returned by a search for a specific annotation.
+ */
+typedef struct ldoc_res_t
+{
+    bool nde;
+    ldoc_info_t info;
+} ldoc_res_t;
+    
 /**
  *
  */
@@ -294,6 +312,7 @@ extern ldoc_ser_t* LDOC_SER_NULL;
 extern ldoc_pos_t* LDOC_POS_NULL;
 extern ldoc_nde_t* LDOC_NDE_NULL;
 extern ldoc_ent_t* LDOC_ENT_NULL;
+extern ldoc_res_t* LDOC_RES_NULL;
 extern ldoc_doc_anno_t LDOC_ANNO_NULL;
 
 /*
@@ -436,6 +455,12 @@ uint16_t ldoc_nde_lvl(ldoc_nde_t* nde);
  */
 ldoc_ser_t* ldoc_format(ldoc_doc_t* doc, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_ent_t* vis_ent);
 
+ldoc_res_t* ldoc_find_anno_ent(ldoc_nde_t* nde, char* leaf);
+ldoc_res_t* ldoc_find_anno_nde(ldoc_nde_t* nde, char** pth, size_t plen);
+ldoc_res_t* ldoc_find_anno(ldoc_doc_t* doc, char** pth, size_t plen);
+    
+void ldoc_res_free(ldoc_res_t* res);
+    
 /**
  * @brief Given a null-based cursor position that is counted from the beginning of
  *        a document, returns the document node and offset within the node that entails
