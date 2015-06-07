@@ -1312,10 +1312,9 @@ PyObject* ldoc_vis_ent_py_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
 {
     PyObject* val;
     
-    if ((ent->tpe == LDOC_ENT_BR && !ent->pld.pair.dtm.str) ||
-        (ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
+    if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
         (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
-        (ent->tpe != LDOC_ENT_OR && !ent->pld.str))
+        (ent->tpe != LDOC_ENT_BR && ent->tpe != LDOC_ENT_OR && !ent->pld.str))
     {
         val = Py_None;
     }
