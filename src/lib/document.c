@@ -1604,6 +1604,7 @@ ldoc_ent_t* ldoc_ent_new(ldoc_content_t tpe)
 {
     ldoc_ent_t* ent = (ldoc_ent_t*)malloc(sizeof(ldoc_ent_t));
     
+    ent->prnt = NULL;
     ent->tpe = tpe;
     ent->pld.str = NULL;
     
@@ -1649,6 +1650,7 @@ void ldoc_nde_free(ldoc_nde_t* nde)
 
 void ldoc_nde_ent_push(ldoc_nde_t* nde, ldoc_ent_t* ent)
 {
+    ent->prnt = nde;
     TAILQ_INSERT_TAIL(&(nde->ents), ent, ldoc_ent_entries);
     nde->ent_cnt++;
 }
@@ -1660,6 +1662,7 @@ void ldoc_nde_ent_pop()
 
 void ldoc_nde_ent_shift(ldoc_nde_t* nde, ldoc_ent_t* ent)
 {
+    ent->prnt = nde;
     TAILQ_INSERT_HEAD(&(nde->ents), ent, ldoc_ent_entries);
     nde->ent_cnt++;
 }
@@ -1674,9 +1677,13 @@ void ldoc_nde_ent_ins()
     
 }
 
-void ldoc_nde_ent_rm()
+void ldoc_ent_rm(ldoc_ent_t* ent)
 {
+    // TODO Common error handling with ldoc_nde_rm.
     
+    TAILQ_REMOVE(&(ent->prnt->ents), ent, ldoc_ent_entries);
+    
+    ent->prnt->ent_cnt--;
 }
 
 void ldoc_nde_dsc_push(ldoc_nde_t* nde, ldoc_nde_t* dsc)
@@ -1708,9 +1715,15 @@ void ldoc_nde_dsc_ins()
     
 }
 
-void ldoc_nde_dsc_rm()
+void ldoc_nde_rm(ldoc_nde_t* nde)
 {
+    // TODO Common error handling with ldoc_ent_rm.
     
+    // TODO Check that nde is not the root node. Cannot remove the root node.
+    
+    TAILQ_REMOVE(&(nde->prnt->dscs), nde, ldoc_nde_entries);
+    
+    nde->prnt->dsc_cnt--;
 }
 
 uint16_t ldoc_nde_lvl(ldoc_nde_t* nde)

@@ -362,6 +362,44 @@ TEST(ldoc_document, big_document)
 }
 
 //
+// Document manipulation
+//
+
+TEST(ldoc_document, small_document_rm)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_UA);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ldoc_nde_ent_push(nde, ent);
+    EXPECT_EQ(0, nde->dsc_cnt);
+    EXPECT_EQ(1, nde->ent_cnt);
+
+    ldoc_ent_rm(ent);
+    EXPECT_EQ(0, nde->dsc_cnt);
+    EXPECT_EQ(0, nde->ent_cnt);
+
+    EXPECT_EQ(1, doc->rt->dsc_cnt);
+    EXPECT_EQ(0, doc->rt->ent_cnt);
+    ldoc_nde_rm(nde);
+    EXPECT_EQ(0, doc->rt->dsc_cnt);
+    EXPECT_EQ(0, doc->rt->ent_cnt);
+    
+    // Part of the test: free the entity first. If it would still be linked
+    // to the node, then the free-call of the node would cause a bad mem-access.
+    ldoc_ent_free(ent);
+    ldoc_nde_free(nde);
+    
+    ldoc_doc_free(doc);
+}
+
+//
 // Search
 //
 

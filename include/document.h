@@ -188,6 +188,7 @@ typedef struct ldoc_nde_qstk_t
  */
 typedef struct ldoc_ent_t
 {
+    ldoc_nde_t* prnt;
     ldoc_content_t tpe;
     ldoc_pld_t pld;
     TAILQ_ENTRY(ldoc_ent_t) ldoc_ent_entries;
@@ -411,9 +412,9 @@ void ldoc_nde_ent_unshift();
 void ldoc_nde_ent_ins();
 
 /**
- * @brief Remove a specific entity from a node's entity list.
+ * @brief Remove an entity from a document tree.
  */
-void ldoc_nde_ent_rm();
+void ldoc_ent_rm(ldoc_ent_t* ent);
 
 /**
  * @brief Add an entity to the end of a node's descendant list.
@@ -441,9 +442,9 @@ void ldoc_nde_dsc_unshift();
 void ldoc_nde_dsc_ins();
 
 /**
- * @brief Remove a specific entity from a node's descendant list.
+ * @brief Remove a node and its descendants from a document tree.
  */
-void ldoc_nde_dsc_rm();
+void ldoc_nde_rm(ldoc_nde_t* nde);
 
 /**
  * @brief Returns the level at which a node is located at.
