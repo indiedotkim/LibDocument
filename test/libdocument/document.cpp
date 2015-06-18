@@ -660,6 +660,48 @@ TEST(ldoc_document, format_json_references)
     ldoc_doc_free(doc);
 }
 
+
+TEST(ldoc_document, format_json_list_text)
+{
+    ldoc_doc_t* doc = ldoc_doc_new();
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)doc);
+    
+    ldoc_nde_t* nde = ldoc_nde_new(LDOC_NDE_OL);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)nde);
+    nde->mkup.anno.str = strdup("NID");
+    ldoc_nde_dsc_push(doc->rt, nde);
+    
+    ldoc_ent_t* ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.str = strdup("text1");
+    
+    ldoc_nde_ent_push(nde, ent);
+
+    ent = ldoc_ent_new(LDOC_ENT_TXT);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)ent);
+    
+    ent->pld.str = strdup("text2");
+    
+    ldoc_nde_ent_push(nde, ent);
+
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+    
+    EXPECT_STREQ("{\"NID\":[\"text1\",\"text2\"]}", ser->pld.str);
+    
+    ldoc_doc_free(doc);
+}
+
 TEST(ldoc_document, format_json_lists)
 {
     ldoc_doc_t* doc = ldoc_ord_doc();
