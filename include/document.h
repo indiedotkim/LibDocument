@@ -329,15 +329,30 @@ ldoc_doc_t* ldoc_pydict2doc(PyObject* dict);
 ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe);
 
 /**
+ * @brief Frees the memory of a serialization structure.
+ */
+void ldoc_ser_free(ldoc_ser_t* ser);
+    
+/**
  * @brief Allocates a new node visitor data structure.
  */
 ldoc_vis_nde_ord_t* ldoc_vis_nde_ord_new();
+
+/**
+ * @brief Frees the memory of a node visitor data structure.
+ */
+void ldoc_vis_nde_ord_free(ldoc_vis_nde_ord_t* vis_nde);
 
 /**
  * @brief Allocates a new entity visitor data structure.
  */
 ldoc_vis_ent_t* ldoc_vis_ent_new();
 
+/**
+ * @brief Frees the memory of an entity visitor data structure.
+ */
+void ldoc_vis_ent_free(ldoc_vis_ent_t* vis_ent);
+    
 /**
  * @brief Uniformly populates a node visitor object with a single visitor function.
  *
@@ -456,6 +471,11 @@ uint16_t ldoc_nde_lvl(ldoc_nde_t* nde);
  */
 ldoc_ser_t* ldoc_format(ldoc_doc_t* doc, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_ent_t* vis_ent);
 
+/**
+ * @brief Format the given document as an object in JSON.
+ */
+ldoc_ser_t* ldoc_format_json(ldoc_doc_t* doc);
+    
 ldoc_res_t* ldoc_find_anno_ent(ldoc_nde_t* nde, char* leaf);
 ldoc_res_t* ldoc_find_anno_nde(ldoc_nde_t* nde, char** pth, size_t plen);
 ldoc_res_t* ldoc_find_anno(ldoc_doc_t* doc, char** pth, size_t plen);

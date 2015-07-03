@@ -323,6 +323,11 @@ inline ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe)
     return ser;
 }
 
+inline void ldoc_ser_free(ldoc_ser_t* ser)
+{
+    free(ser);
+}
+
 static inline ldoc_nde_t* ldoc_nde_new_(ldoc_struct_t tpe)
 {
     ldoc_nde_t* nde = (ldoc_nde_t*)malloc(sizeof(ldoc_nde_t));
@@ -504,6 +509,11 @@ ldoc_vis_nde_ord_t* ldoc_vis_nde_ord_new()
     return vis;
 }
 
+void ldoc_vis_nde_ord_free(ldoc_vis_nde_ord_t* vis_nde)
+{
+    free(vis_nde);
+}
+
 ldoc_vis_ent_t* ldoc_vis_ent_new()
 {
     ldoc_vis_ent_t* vis = (ldoc_vis_ent_t*)malloc(sizeof(ldoc_vis_ent_t));
@@ -517,6 +527,11 @@ ldoc_vis_ent_t* ldoc_vis_ent_new()
     memset(vis, 0, sizeof(ldoc_vis_ent_t));
     
     return vis;
+}
+
+void ldoc_vis_ent_free(ldoc_vis_ent_t* vis_ent)
+{
+    free(vis_ent);
 }
 
 void ldoc_vis_nde_uni(ldoc_vis_nde_t* vis, ldoc_ser_t* (*vis_uni)(ldoc_nde_t* nde, ldoc_coord_t* coord))
@@ -1097,7 +1112,10 @@ char* ldoc_vis_ent_json_val(ldoc_ent_t* ent, ldoc_coord_t* coord, size_t* len)
     // Note that LDOC_ENT_BR is not in this list: ent->pld.pair.dtm.bl is always either true/false!
     if ((ent->tpe == LDOC_ENT_NR && !ent->pld.pair.dtm.str) ||
         (ent->tpe == LDOC_ENT_OR && !ent->pld.pair.dtm.str) ||
-        (ent->tpe != LDOC_ENT_BR && ent->tpe != LDOC_ENT_OR && !ent->pld.str))
+        (ent->tpe != LDOC_ENT_BR &&
+         ent->tpe != LDOC_ENT_OR &&
+         ent->tpe != LDOC_ENT_BL &&
+         !ent->pld.str))
     {
         val_len = strlen(ldoc_cnst_json_null);
         val = strdup(ldoc_cnst_json_null);
@@ -1851,6 +1869,26 @@ ldoc_ser_t* ldoc_format(ldoc_doc_t* doc, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_e
     ldoc_ser_concat(opn, cls);
     
     return opn;
+}
+
+ldoc_ser_t* ldoc_format_json(ldoc_doc_t* doc)
+{
+    ldoc_vis_nde_ord_t* vis_nde = ldoc_vis_nde_ord_new();
+    vis_nde->vis_setup = ldoc_vis_setup_json;
+    vis_nde->vis_teardown = ldoc_vis_teardown_json;
+    ldoc_vis_nde_uni(&(vis_nde->pre), ldoc_vis_nde_pre_json);
+    ldoc_vis_nde_uni(&(vis_nde->infx), ldoc_vis_nde_infx_json);
+    ldoc_vis_nde_uni(&(vis_nde->post), ldoc_vis_nde_post_json);
+    
+    ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
+    ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_json);
+    
+    ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
+
+    ldoc_vis_nde_ord_free(vis_nde);
+    ldoc_vis_ent_free(vis_ent);
+    
+    return ser;
 }
 
 static inline uint64_t ldoc_nde_ent_skip(ldoc_nde_t* nde, uint64_t off)
