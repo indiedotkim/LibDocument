@@ -423,9 +423,9 @@ static inline ldoc_json_prs_err_t ldoc_json_val(ldoc_nde_t* nde, char* ky, char*
     return LDOC_JSON_INV;
 }
 
-ldoc_doc_t* ldoc_json_read(char* json, size_t len, off_t* err)
+ldoc_doc_t* ldoc_json_read_doc(char* json, size_t len, off_t* err, off_t* nxt)
 {
-    char* obj = ldoc_json_skpws(json, &len);
+    char* obj = ldoc_json_skpws(json + (nxt ? *nxt : 0), &len);
 
     if (!len || *obj != '{')
     {
@@ -441,10 +441,21 @@ ldoc_doc_t* ldoc_json_read(char* json, size_t len, off_t* err)
     
     ldoc_json_obj(doc->rt, &obj, &len);
     
+    if (nxt)
+        *nxt = obj - json;
+    
     return doc;
+}
+
+ldoc_doc_t* ldoc_json_read(char* json, size_t len, off_t* err)
+{
+    return ldoc_json_read_doc(json, len, err, NULL);
 }
 
 ldoc_doc_t* ldoc_ldjson_read(char* ldj, size_t len, off_t* err, off_t* nxt)
 {
+    if (*nxt >= len)
+        return NULL;
     
+    return ldoc_json_read_doc(ldj, len, err, nxt);
 }

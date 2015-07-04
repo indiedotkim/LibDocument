@@ -12,8 +12,8 @@
 
 const char* ldoc_json_small = "{ \"key1\" : 123, \"key2\" : \"Hello\\n\", \"key3\" : [ \"val3.1\", 3.141, null, true, false, [[ { \"nested\" : true } ]] ] }";
 const char* ldoc_json_small_ref = "{\"key1\":123,\"key2\":\"Hello\\n\",\"key3\":[\"val3.1\",3.141,null,true,false,[[{\"nested\":true}]]]}";
-const char* ldoc_json_big = "{}";
-const char* ldoc_ldj = "{}\n{}\n{}\n";
+
+const char* ldoc_ldj = "{\"key1\":123}\n{\"key2\":true}\n{\"key3\":[1,2,3]}";
 
 TEST(ldoc_json, empty_json)
 {
@@ -38,10 +38,46 @@ TEST(ldoc_json, small_json)
     ldoc_doc_free(doc);
 }
 
-TEST(ldoc_json, big_json)
+TEST(ldoc_json, ldj)
 {
+    char* ldj;
     off_t err = 0;
+    off_t nxt = 0;
+    size_t len = strlen(ldoc_ldj);
     
-    ldoc_doc_t* doc = ldoc_json_read((char*)ldoc_json_big, strlen(ldoc_json_big), &err);
+    ldoc_doc_t* doc = ldoc_ldjson_read((char*)ldoc_ldj, len, &err, &nxt);
     EXPECT_EQ(0, err);
+
+    ldoc_ser_t* ser = ldoc_format_json(doc);
+    EXPECT_NE((ldoc_ser_t*)NULL, ser);
+    ldj = strdup(ser->pld.str);
+    EXPECT_NE((char*)NULL, ldj);
+    ldoc_ser_free(ser);
+    ldoc_doc_free(doc);
+    
+    doc = ldoc_ldjson_read((char*)ldoc_ldj, len, &err, &nxt);
+    EXPECT_EQ(0, err);
+
+    ser = ldoc_format_json(doc);
+    EXPECT_NE((ldoc_ser_t*)NULL, ser);
+    ldj = (char*)realloc(ldj, strlen(ldj) + strlen(ser->pld.str) + 2);
+    EXPECT_NE((char*)NULL, ldj);
+    strcat(ldj, "\n");
+    strcat(ldj, ser->pld.str);
+    ldoc_ser_free(ser);
+    ldoc_doc_free(doc);
+    
+    doc = ldoc_ldjson_read((char*)ldoc_ldj, len, &err, &nxt);
+    EXPECT_EQ(0, err);
+
+    ser = ldoc_format_json(doc);
+    EXPECT_NE((ldoc_ser_t*)NULL, ser);
+    ldj = (char*)realloc(ldj, strlen(ldj) + strlen(ser->pld.str) + 2);
+    EXPECT_NE((char*)NULL, ldj);
+    strcat(ldj, "\n");
+    strcat(ldj, ser->pld.str);
+    ldoc_ser_free(ser);
+    ldoc_doc_free(doc);
+    
+    EXPECT_STREQ(ldoc_ldj, ldj);
 }
