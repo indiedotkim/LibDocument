@@ -1687,13 +1687,17 @@ void ldoc_nde_free(ldoc_nde_t* nde)
     TAILQ_FOREACH(ent, &(nde->ents), ldoc_ent_entries)
     {
         ldoc_ent_free(ent);
+        
+        TAILQ_REMOVE(&(nde->ents), ent, ldoc_ent_entries);
     }
     
-    ldoc_nde_t* cld;
+    ldoc_nde_t* dsc;
     
-    TAILQ_FOREACH(cld, &(nde->dscs), ldoc_nde_entries)
+    TAILQ_FOREACH(dsc, &(nde->dscs), ldoc_nde_entries)
     {
-        ldoc_nde_free(cld);
+        ldoc_nde_free(dsc);
+        
+        TAILQ_REMOVE(&(nde->dscs), dsc, ldoc_nde_entries);
     }
     
     free(nde);
