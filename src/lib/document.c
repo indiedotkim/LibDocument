@@ -339,8 +339,9 @@ inline void ldoc_ser_free(ldoc_ser_t* ser)
         case LDOC_SER_PY_STR:
         case LDOC_SER_PY_LST:
         case LDOC_SER_PY_DCT:
-            free(ser->pld.py.anno);
-            free(ser->pld.py.dtm);
+            if (ser->pld.py.anno)
+                Py_DECREF(ser->pld.py.anno);
+            Py_DECREF(ser->pld.py.dtm);
             break;
         default:
             // Internal error;
@@ -994,6 +995,8 @@ ldoc_ser_t* ldoc_vis_nde_post_html(ldoc_nde_t* nde, ldoc_coord_t* coord)
     return ldoc_vis_nde_cls_html(nde, coord, true);
 }
 
+// JSON
+
 ldoc_ser_t* ldoc_vis_setup_json(void)
 {
     ldoc_ser_t* ser = ldoc_ser_new(LDOC_SER_CSTR);
@@ -1047,11 +1050,11 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
     char* lbl;
     
     if (nde->prnt->tpe == LDOC_NDE_OL)
-        lbl = "";
+        lbl = calloc(1, 1);
     else if (nde->mkup.anno.str != NULL)
     {
         lbl_len = strlen(nde->mkup.anno.str);
-        lbl = nde->mkup.anno.str;
+        lbl = strdup(nde->mkup.anno.str);
     }
     else
     {
@@ -1081,6 +1084,8 @@ ldoc_ser_t* ldoc_vis_nde_pre_json(ldoc_nde_t* nde, ldoc_coord_t* coord)
         snprintf(ser->pld.str, ser_len, "%s%s", sep, opn);
     else
         snprintf(ser->pld.str, ser_len, "%s\"%s\":%s", sep, lbl, opn);
+    
+    free(lbl);
     
     return ser;
 }
@@ -1299,6 +1304,11 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
         strncpy(&ser->pld.str[lbl_len_act], json, json_len);
         ser->pld.str[clen] = 0;
     }
+    
+    if (lbl)
+        free(lbl);
+    if (json)
+        free(json);
     
     return ser;
 }
