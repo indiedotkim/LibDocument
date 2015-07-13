@@ -1901,9 +1901,13 @@ ldoc_ser_t* ldoc_format(ldoc_doc_t* doc, ldoc_vis_nde_ord_t* vis_nde, ldoc_vis_e
     if (opn == LDOC_SER_NULL)
         opn = ser;
     else
+    {
         ldoc_ser_concat(opn, ser);
+        ldoc_ser_free(ser);
+    }
     
     ldoc_ser_concat(opn, cls);
+    ldoc_ser_free(cls);
     
     return opn;
 }
