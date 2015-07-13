@@ -325,6 +325,25 @@ inline ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe)
 
 inline void ldoc_ser_free(ldoc_ser_t* ser)
 {
+    switch (ser->tpe)
+    {
+        case LDOC_SER_CSTR:
+            free(ser->pld.str);
+            break;
+        case LDOC_SER_PY_INT:
+        case LDOC_SER_PY_BL:
+        case LDOC_SER_PY_FLT:
+        case LDOC_SER_PY_STR:
+        case LDOC_SER_PY_LST:
+        case LDOC_SER_PY_DCT:
+            free(ser->pld.py.anno);
+            free(ser->pld.py.dtm);
+            break;
+        default:
+            // Internal error;
+            break;
+    }
+    
     free(ser);
 }
 
