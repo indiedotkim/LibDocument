@@ -325,6 +325,9 @@ inline ldoc_ser_t* ldoc_ser_new(ldoc_serpld_t tpe)
 
 inline void ldoc_ser_free(ldoc_ser_t* ser)
 {
+    if (!ser)
+        return;
+    
     switch (ser->tpe)
     {
         case LDOC_SER_CSTR:
@@ -1601,14 +1604,15 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
     TAILQ_FOREACH(ent, &(nde->ents), ldoc_ent_entries)
     {
         ldoc_ser_t* ser_ent = ldoc_vis_ent(nde, ent, coord, vis_ent);
-        
         ldoc_ser_concat(ser, ser_ent);
+        ldoc_ser_free(ser_ent);
         
         coord->pln++;
     }
 
     ldoc_ser_t* ser_infx = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->infx));
     ldoc_ser_concat(ser, ser_infx);
+    ldoc_ser_free(ser_infx);
     
     // Reset plane -- for node visits:
     coord->pln = pln;
@@ -1620,8 +1624,8 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
     TAILQ_FOREACH(dsc, &(nde->dscs), ldoc_nde_entries)
     {
         ldoc_ser_t* ser_nde = ldoc_vis_nde(dsc, coord, vis_nde, vis_ent);
-        
         ldoc_ser_concat(ser, ser_nde);
+        ldoc_ser_free(ser_nde);
         
         coord->pln++;
     }
@@ -1631,8 +1635,8 @@ static ldoc_ser_t* ldoc_vis_nde(ldoc_nde_t* nde, ldoc_coord_t* coord, ldoc_vis_n
     coord->lvl--;
     
     ldoc_ser_t* ser_post = ldoc_vis_nde_tpe(nde, coord, &(vis_nde->post));
-    
     ldoc_ser_concat(ser, ser_post);
+    ldoc_ser_free(ser_post);
     
     return ser;
 }
