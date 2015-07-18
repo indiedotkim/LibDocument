@@ -60,12 +60,12 @@ ExternalProject_Add(googletest-lib
     INSTALL_COMMAND true)
 
 # Dependency Doxygen:
-ExternalProject_Add(doxygen
-    GIT_REPOSITORY https://github.com/doxygen/doxygen.git
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/doxygen
-    BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/doxygen
-    CONFIGURE_COMMAND ./configure
-    BUILD_COMMAND ${MAKE})
+#ExternalProject_Add(doxygen
+#    GIT_REPOSITORY https://github.com/doxygen/doxygen.git
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/doxygen
+#    BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/doxygen
+#    CONFIGURE_COMMAND ./configure
+#    BUILD_COMMAND ${MAKE})
 
 #
 # libdocument generation:
