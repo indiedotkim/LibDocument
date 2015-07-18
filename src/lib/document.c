@@ -390,7 +390,10 @@ static inline void ldoc_ser_concat_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 
 static inline void ldoc_ser_concat_py_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
-    PyObject* ccat = PyUnicode_Concat(ser1->pld.py.dtm, ser1->pld.py.dtm);
+    PyObject* ccat = PyUnicode_Concat(ser1->pld.py.dtm, ser2->pld.py.dtm);
+    
+    Py_DECREF(ser1->pld.py.dtm);
+    Py_DECREF(ser2->pld.py.dtm);
     
     ser1->pld.py.dtm = ccat;
 }
