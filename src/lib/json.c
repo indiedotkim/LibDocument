@@ -432,7 +432,7 @@ ldoc_doc_t* ldoc_json_read_doc(char* json, size_t len, off_t* err, off_t* nxt)
         if (err)
             *err = obj - json;
         
-        return LDOC_JSON_INV;
+        return NULL;
     }
     
     ldoc_doc_t* doc = ldoc_doc_new();
