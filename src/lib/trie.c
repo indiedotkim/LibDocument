@@ -64,7 +64,8 @@ static char ldoc_trie_char(ldoc_trie_nde_t* nde, uint16_t off)
 
 static void ldoc_trie_nde_ndnt(uint16_t lvl)
 {
-    for (uint16_t i = 0; i < lvl * 2; i++)
+    uint16_t i = 0;
+    for (; i < lvl * 2; i++)
         printf(" ");
 }
 
@@ -77,7 +78,8 @@ static void ldoc_trie_nde_dmp(ldoc_trie_nde_t* nde, char chr, uint16_t lvl)
     ldoc_trie_nde_ndnt(lvl);
     printf("%c, type %u, size %u, category %u, payload %08llx\n", chr, nde->tpe, nde->size, nde->anno.cat, (uint64_t)nde->anno.pld);
     
-    for (uint16_t i = 0; i < nde->size; i++)
+    uint16_t i = 0;
+    for (; i < nde->size; i++)
     {
         char dchr = ldoc_trie_char(nde, i);
         ldoc_trie_nde_dmp(nde->dscs[i], dchr, lvl + 1);
@@ -283,7 +285,8 @@ ldoc_trie_t* ldoc_trie_new()
 
 ldoc_trie_nde_t* ldoc_trie_dsc_iter(ldoc_trie_nde_t* nde, char chr)
 {
-    for (uint16_t i = 0; i < nde->size; i++)
+    uint16_t i = 0;
+    for (; i < nde->size; i++)
     {
         char ci;
         
@@ -369,7 +372,8 @@ void ldoc_trie_nde_free(ldoc_trie_nde_t* nde)
     // If the node has descendents, then free those too:
     if (nde->size)
     {
-        for (uint16_t n = 0; n < nde->size; n++)
+        uint16_t n = 0;
+        for (; n < nde->size; n++)
         {
             ldoc_trie_nde_t* dsc = ldoc_trie_dscn(nde, n);
             ldoc_trie_nde_free(dsc);
