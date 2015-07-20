@@ -116,11 +116,19 @@ add_dependencies(tests document-static googletest-lib)
 # Linking information for executables:
 #
 
+if(APPLE)
 target_link_libraries(libdocument-ex1 document-static)
+else(APPLE)
+target_link_libraries(libdocument-ex1 document-static dl m pthread util)
+endif(APPLE)
 
 # As suggested in the googletest README: link libgtest statically:
 add_library(gtest STATIC IMPORTED)
 set_target_properties(gtest PROPERTIES
     IMPORTED_LOCATION src/googletest/lib/.libs/libgtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+if(APPLE)
 target_link_libraries(tests document-static gtest)
+else(APPLE)
+target_link_libraries(tests document-static dl m pthread util gtest)
+endif(APPLE)
 
