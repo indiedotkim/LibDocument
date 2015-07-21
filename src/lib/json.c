@@ -207,8 +207,14 @@ static inline ldoc_json_prs_err_t ldoc_json_obj(ldoc_nde_t* nde, char** str, siz
         *str = ldoc_json_skpws(*str, len);
         
         if (len && **str == '}')
+        {
+            // Skip '}':
+            (*str)++;
+            (*len)--;
+
             return LDOC_JSON_OK;
-            
+        }
+        
         if (!len || **str != '"')
             return LDOC_JSON_INV;
         
