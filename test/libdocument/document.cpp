@@ -746,6 +746,8 @@ TEST(ldoc_document, format_json_multiple_lists)
     ldoc_doc_free(doc);
 }
 
+#ifndef LDOC_NOPYTHON
+
 //
 // Python
 //
@@ -874,3 +876,5 @@ TEST(ldoc_document, py_import)
     
     Py_Finalize();
 }
+
+#endif // #ifndef LDOC_NOPYTHON

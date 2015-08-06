@@ -16,7 +16,9 @@
 #include <string.h>
 #include <sys/queue.h>
 
+#ifndef LDOC_NOPYTHON
 #include <Python.h>
+#endif // #ifndef LDOC_NOPYTHON
 
 #include "trie.h"
 
@@ -93,6 +95,8 @@ typedef struct ldoc_doc_anno_t
     ldoc_anno_pld_t anno;
 } ldoc_doc_anno_t;
     
+#ifndef LDOC_NOPYTHON
+    
 /**
  *
  */
@@ -102,6 +106,8 @@ typedef struct ldoc_py_t
     PyObject* anno;
 } ldoc_py_t;
 
+#endif // #ifndef LDOC_NOPYTHON
+    
 /**
  *
  */
@@ -111,7 +117,9 @@ typedef union
     char* str;
     ldoc_raw_t raw;
     ldoc_doc_anno_t pair;
+#ifndef LDOC_NOPYTHON
     ldoc_py_t py;
+#endif // #ifndef LDOC_NOPYTHON
 } ldoc_pld_t;
     
 typedef enum
@@ -316,12 +324,16 @@ extern ldoc_ent_t* LDOC_ENT_NULL;
 extern ldoc_res_t* LDOC_RES_NULL;
 extern ldoc_doc_anno_t LDOC_ANNO_NULL;
 
+#ifndef LDOC_NOPYTHON
+    
 /*
  * @brief Returns a string representation of a Python object (Python call "str(obj)").
  */
 char* ldoc_py2str(PyObject* obj);
    
 ldoc_doc_t* ldoc_pydict2doc(PyObject* dict);
+    
+#endif // #ifndef LDOC_NOPYTHON
     
 /**
  * @brief Allocates a new serialization structure.

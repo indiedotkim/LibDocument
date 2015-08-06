@@ -15,6 +15,8 @@ ldoc_ent_t* LDOC_ENT_NULL = NULL;
 ldoc_res_t* LDOC_RES_NULL = NULL;
 ldoc_doc_anno_t LDOC_ANNO_NULL = { { NULL }, { NULL } };
 
+#pragma mark - HTML Constants
+
 static const char* ldoc_cnst_html_doc_opn = "<html>\n  <body>\n";
 static const char* ldoc_cnst_html_em1_opn = "<em>";
 static const char* ldoc_cnst_html_em2_opn = "<strong>";
@@ -36,6 +38,8 @@ static const char* ldoc_cnst_html_h4_cls = "</h4>\n";
 static const char* ldoc_cnst_html_h5_cls = "</h5>\n";
 static const char* ldoc_cnst_html_h6_cls = "</h6>\n";
 static const char* ldoc_cnst_html_par_cls = "</p>\n";
+
+#pragma mark - JSON Constants & Keywords
 
 static const char* ldoc_cnst_json_opn = "{";
 static const char* ldoc_cnst_json_lopn = "[";
@@ -62,11 +66,16 @@ static const char* ldoc_cnst_json_null = "null";
 static const char* ldoc_cnst_json_cls = "}";
 static const char* ldoc_cnst_json_lcls = "]";
 
+#ifndef LDOC_NOPYTHON
 static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict);
 static ldoc_nde_t* ldoc_pydict2doc_lst(PyObject* lbl, PyObject* dict);
+#endif // #ifndef LDOC_NOPYTHON
 
 ldoc_res_t* ldoc_find_anno_nde(ldoc_nde_t* nde, char** pth, size_t plen);
 
+#pragma mark - Python Utilities
+
+#ifndef LDOC_NOPYTHON
 char* ldoc_py2str(PyObject* obj)
 {
     PyObject* str = PyObject_Str(obj);
@@ -270,6 +279,9 @@ ldoc_doc_t* ldoc_pydict2doc(PyObject* dict)
     
     return doc;
 }
+#endif // #ifndef LDOC_NOPYTHON
+
+#pragma mark - Type Utilities
 
 static inline bool ldoc_isfloat(char* str)
 {
@@ -283,6 +295,8 @@ static inline bool ldoc_isfloat(char* str)
     
     return flt;
 }
+
+#pragma mark - Allocators & Deallocators
 
 static inline ldoc_res_t* ldoc_srch_new(ldoc_nde_t* nde, ldoc_ent_t* ent)
 {
@@ -333,6 +347,7 @@ inline void ldoc_ser_free(ldoc_ser_t* ser)
         case LDOC_SER_CSTR:
             free(ser->pld.str);
             break;
+#ifndef LDOC_NOPYTHON
         case LDOC_SER_PY_INT:
         case LDOC_SER_PY_BL:
         case LDOC_SER_PY_FLT:
@@ -343,6 +358,7 @@ inline void ldoc_ser_free(ldoc_ser_t* ser)
                 Py_DECREF(ser->pld.py.anno);
             Py_DECREF(ser->pld.py.dtm);
             break;
+#endif // #ifndef LDOC_NOPYTHON
         default:
             // Internal error;
             break;
@@ -372,6 +388,8 @@ static inline ldoc_nde_t* ldoc_nde_new_(ldoc_struct_t tpe)
     return nde;
 }
 
+#pragma mark - Serialization Utilities
+
 static inline void ldoc_ser_concat_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
     size_t len2 = strlen(ser2->pld.str);
@@ -388,6 +406,7 @@ static inline void ldoc_ser_concat_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
     strncat(ser1->pld.str, ser2->pld.str, len2);
 }
 
+#ifndef LDOC_NOPYTHON
 static inline void ldoc_ser_concat_py_str(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
     PyObject* ccat = PyUnicode_Concat(ser1->pld.py.dtm, ser2->pld.py.dtm);
@@ -431,6 +450,7 @@ static inline void ldoc_ser_concat_py_lst(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
             break;
     }
 }
+#endif // #ifndef LDOC_NOPYTHON
 
 void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
 {
@@ -442,6 +462,7 @@ void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
     
     switch (ser1->tpe)
     {
+#ifndef LDOC_NOPYTHON
         case LDOC_SER_PY_BL:
         case LDOC_SER_PY_FLT:
         case LDOC_SER_PY_INT:
@@ -463,6 +484,7 @@ void ldoc_ser_concat(ldoc_ser_t* ser1, ldoc_ser_t* ser2)
         case LDOC_SER_PY_LST:
             ldoc_ser_concat_py_lst(ser1, ser2);
             break;
+#endif // #ifndef LDOC_NOPYTHON
         case LDOC_SER_CSTR:
             return ldoc_ser_concat_str(ser1, ser2);
         default:
@@ -897,6 +919,8 @@ static inline void ldoc_strcat3(ldoc_ser_t* ser, char* s1, char* s2, char* s3)
     strncat(ser->pld.str, s3, len3);
 }
 
+#pragma mark - HTML Formatting
+
 ldoc_ser_t* ldoc_vis_ent_html(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord)
 {
     // TODO Only strings supported right now.
@@ -998,7 +1022,7 @@ ldoc_ser_t* ldoc_vis_nde_post_html(ldoc_nde_t* nde, ldoc_coord_t* coord)
     return ldoc_vis_nde_cls_html(nde, coord, true);
 }
 
-// JSON
+#pragma mark - JSON Formatting
 
 ldoc_ser_t* ldoc_vis_setup_json(void)
 {
@@ -1316,9 +1340,9 @@ ldoc_ser_t* ldoc_vis_ent_json(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* co
     return ser;
 }
 
-//
-// Python
-//
+#ifndef LDOC_NOPYTHON
+
+#pragma mark - Python-Dict Formatting
 
 ldoc_ser_t* ldoc_vis_setup_py(void)
 {
@@ -1553,7 +1577,9 @@ ldoc_ser_t* ldoc_vis_ent_py(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coor
     return ser;
 }
 
-////
+#endif // #ifndef LDOC_NOPYTHON
+
+#pragma mark - Visitor
 
 ldoc_ser_t* ldoc_vis_dmp(ldoc_nde_t* nde, ldoc_ent_t* ent, ldoc_coord_t* coord)
 {
