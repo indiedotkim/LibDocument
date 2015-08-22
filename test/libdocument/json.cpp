@@ -13,6 +13,9 @@
 const char* ldoc_json_small = "{ \"key1\" : 123, \"key2\" : \"Hello\\n\", \"key3\" : [ \"val3.1\", 3.141, null, true, false, [[ { \"nested\" : true } ]] ] }";
 const char* ldoc_json_small_ref = "{\"key1\":123,\"key2\":\"Hello\\n\",\"key3\":[\"val3.1\",3.141,null,true,false,[[{\"nested\":true}]]]}";
 
+const char* ldoc_json_empty_list = "{ \"key1\" : [] }";
+const char* ldoc_json_empty_list_ref = "{\"key1\":[]}";
+
 const char* ldoc_ldj = "{\"key1\":123}\n{\"key2\":true}\n{\"key3\":[1,2,3]}";
 
 TEST(ldoc_json, empty_json)
@@ -34,6 +37,21 @@ TEST(ldoc_json, small_json)
     EXPECT_NE((ldoc_ser_t*)NULL, ser);
     EXPECT_STREQ(ldoc_json_small_ref, ser->pld.str);
 
+    ldoc_ser_free(ser);
+    ldoc_doc_free(doc);
+}
+
+TEST(ldoc_json, empty_list_json)
+{
+    off_t err = 0;
+    
+    ldoc_doc_t* doc = ldoc_json_read((char*)ldoc_json_empty_list, strlen(ldoc_json_empty_list), &err);
+    EXPECT_EQ(0, err);
+    
+    ldoc_ser_t* ser = ldoc_format_json(doc);
+    EXPECT_NE((ldoc_ser_t*)NULL, ser);
+    EXPECT_STREQ(ldoc_json_empty_list_ref, ser->pld.str);
+    
     ldoc_ser_free(ser);
     ldoc_doc_free(doc);
 }

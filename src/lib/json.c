@@ -285,6 +285,15 @@ static inline ldoc_json_prs_err_t ldoc_json_arr(ldoc_nde_t* nde, char** str, siz
     if (!len)
         return LDOC_JSON_INV;
     
+    // Empty array, skip ']', then return:
+    if (**str == ']')
+    {
+        (*str)++;
+        (*len)--;
+        
+        return LDOC_JSON_OK;
+    }
+    
     do
     {
         if (**str == '{' || **str == '[')
