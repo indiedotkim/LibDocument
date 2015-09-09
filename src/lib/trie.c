@@ -10,6 +10,53 @@
 
 ldoc_trie_anno_t LDOC_TRIE_ANNO_NULL = { 0, NULL };
 
+static inline char* ldoc_sheap_ccatc(char* str, size_t* len, size_t* max, char chr)
+{
+    if (!str)
+    {
+        *max = getpagesize();
+        str = malloc(*max);
+        
+        if (!str)
+        {
+            // TODO: error handling
+        }
+        
+        *len = 0;
+    }
+    
+    // Increase string size, if necessary:
+    if (*len + 2 >= *max)
+    {
+        // Double each time round:
+        *max = *max * 2;
+        
+        str = realloc(str, *max);
+        
+        if (!str)
+        {
+            // TODO: error handling
+        }
+    }
+    
+    *(str + (*len)++) = chr;
+    *(str + *len) = 0;
+    
+    return str;
+}
+
+static inline char* ldoc_sheap_ccat(char* str, size_t* len, size_t* max, char* s)
+{
+    while (*s)
+    {
+        str = ldoc_sheap_ccatc(str, len, max, *s);
+        
+        s++;
+    }
+    
+    return str;
+}
+
 /**
  *
  *
@@ -39,7 +86,7 @@ static inline char ldoc_trie_offset_en_inv(uint16_t off)
         return '0' + off;
     
     // TODO Error.
-    return '^';
+    return LDOC_TRIE_RES_CHR;
 }
 
 static char ldoc_trie_char(ldoc_trie_nde_t* nde, uint16_t off)
@@ -58,7 +105,7 @@ static char ldoc_trie_char(ldoc_trie_nde_t* nde, uint16_t off)
             return (char)nde->chr.c32[off];
         default:
             // TODO Error.
-            return '^';
+            return LDOC_TRIE_RES_CHR;
     }
 }
 
@@ -433,6 +480,12 @@ void ldoc_trie_add_trv(ldoc_trie_nde_t* nde, const char* str, ldoc_trie_ptr_t tp
 {
     char chr = *str;
     
+    // Watch out that the reserved character cannot be added:
+    if (chr == LDOC_TRIE_RES_CHR)
+    {
+        // TODO error
+    }
+    
     // If the string has been consumed, place the user supplied contents (i.e., we are done):
     if (!chr)
     {
@@ -491,4 +544,58 @@ void ldoc_trie_add(ldoc_trie_t* trie, const char* str, ldoc_trie_ptr_t tpe, ldoc
 ldoc_trie_nde_t* ldoc_trie_lookup(ldoc_trie_t* trie, const char* string, bool prefixes)
 {
     return ldoc_trie_lookup_trv(trie->root, string, prefixes);
+}
+
+char* ldoc_trie_collect_trv(ldoc_trie_nde_t* nde, const char* sep, char* str, size_t* len, size_t* max, char* pth, size_t* plen, size_t* pmax)
+{
+    ldoc_trie_nde_t* dsc;
+    char chr;
+    uint16_t i = 0;
+    for (; i < nde->size; i++)
+    {
+        // Append current iteration's character to path:
+        chr = ldoc_trie_char(nde, i);
+        pth = ldoc_sheap_ccatc(pth, plen, pmax, chr);
+        dsc = ldoc_trie_dsc(nde, chr);
+        
+        // If this is a populated entry in the trie, add to `str`:
+        if (dsc)
+        {
+            if (dsc->alloc == NDE_ANNO)
+            {
+                if (str)
+                    str = ldoc_sheap_ccat(str, len, max, (char*)sep);
+                
+                str = ldoc_sheap_ccat(str, len, max, pth);
+            }
+            
+            // Traverse:
+            str = ldoc_trie_collect_trv(dsc, sep, str, len, max, pth, plen, pmax);
+        }
+        
+        // Remove last path character to make room for next iteration:
+        if (*plen)
+        {
+            (*plen)--;
+            *(pth + *plen) = 0;
+        }
+    }
+    
+    return str;
+}
+
+char* ldoc_trie_collect(ldoc_trie_t* trie, const char* sep)
+{
+    size_t len;
+    size_t max;
+    size_t plen = 0;
+    size_t pmax = getpagesize();
+    char* pth = malloc(pmax);
+    
+    if (!pth)
+    {
+        // TODO Error handling.
+    }
+    
+    return ldoc_trie_collect_trv(trie->root, sep, NULL, &len, &max, pth, &plen, &pmax);
 }

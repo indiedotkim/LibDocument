@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/queue.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +24,8 @@ extern "C" {
 #define LDOC_TRIE_NDS_ARR_INIT 64
 #define LDOC_TRIE_NDS_ARR_INC 16
 
+#define LDOC_TRIE_RES_CHR '^'
+    
 /**
  *
  */
@@ -47,8 +50,17 @@ typedef enum
  */
 typedef enum
 {
+    /**
+     * Root node.
+     */
     NDE_ROOT,
+    /**
+     * An empty node which is on a path to an annotated node.
+     */
     NDE_EMPTY,
+    /**
+     * An annotated node, but not necessarily a leaf in the tree.
+     */
     NDE_ANNO
 } ldoc_trie_alloc_t;
     
@@ -150,6 +162,8 @@ ldoc_trie_nde_t* ldoc_trie_lookup(ldoc_trie_t* trie, const char* string, bool pr
     
 void ldoc_trie_dmp(ldoc_trie_t* trie);
 
+char* ldoc_trie_collect(ldoc_trie_t* trie, const char* sep);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

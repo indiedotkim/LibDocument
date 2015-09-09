@@ -19,6 +19,9 @@ const char* entry_cat = "cat";
 const char* entry_catnip = "catnip";
 const char* entry_rose = "rose";
 
+const char* collect_sep = ", ";
+const char* collect_entries = "cat, catnip, rose";
+
 TEST(ldoc_trie, empty_trie)
 {
     ldoc_trie_t* trie = ldoc_trie_new();
@@ -122,6 +125,25 @@ TEST(ldoc_trie, lookup_prefix)
     
     res = ldoc_trie_lookup(trie, "zebra", true);
     EXPECT_EQ(NULL, (LDOC_NULLTYPE)res);
+    
+    ldoc_trie_free(trie);
+}
+
+TEST(ldoc_trie, collect)
+{
+    ldoc_trie_t* trie = ldoc_trie_new();
+    
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)trie);
+    
+    ldoc_trie_anno_t fauna = { FAUNA, NULL };
+    ldoc_trie_anno_t flora = { FLORA, NULL };
+    
+    ldoc_trie_add(trie, entry_cat, EN_ALPH, fauna);
+    ldoc_trie_add(trie, entry_catnip, EN_ALPH, flora);
+    ldoc_trie_add(trie, entry_rose, EN_ALPH, flora);
+    
+    char* str = ldoc_trie_collect(trie, collect_sep);
+    EXPECT_STRCASEEQ(collect_entries, str);
     
     ldoc_trie_free(trie);
 }
