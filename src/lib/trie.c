@@ -541,6 +541,16 @@ void ldoc_trie_add(ldoc_trie_t* trie, const char* str, ldoc_trie_ptr_t tpe, ldoc
     ldoc_trie_add_trv(trie->root, str, tpe, anno);
 }
 
+ldoc_trie_nde_t* ldoc_trie_remove(ldoc_trie_t* trie, const char* str)
+{
+    ldoc_trie_nde_t* nde = ldoc_trie_lookup(trie, str, false);
+    
+    if (nde)
+        nde->alloc = NDE_EMPTY;
+    
+    return nde;
+}
+
 ldoc_trie_nde_t* ldoc_trie_lookup(ldoc_trie_t* trie, const char* string, bool prefixes)
 {
     return ldoc_trie_lookup_trv(trie->root, string, prefixes);

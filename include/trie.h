@@ -158,6 +158,8 @@ void ldoc_trie_nde_arr_appnd(ldoc_trie_nde_arr_t* arr, ldoc_trie_nde_t* nde);
     
 void ldoc_trie_add(ldoc_trie_t* trie, const char* str, ldoc_trie_ptr_t tpe, ldoc_trie_anno_t anno);
 
+ldoc_trie_nde_t* ldoc_trie_remove(ldoc_trie_t* trie, const char* str);
+    
 ldoc_trie_nde_t* ldoc_trie_lookup(ldoc_trie_t* trie, const char* string, bool prefixes);
     
 void ldoc_trie_dmp(ldoc_trie_t* trie);

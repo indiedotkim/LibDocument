@@ -129,6 +129,45 @@ TEST(ldoc_trie, lookup_prefix)
     ldoc_trie_free(trie);
 }
 
+TEST(ldoc_trie, remove)
+{
+    ldoc_trie_nde_t* res;
+    ldoc_trie_t* trie = ldoc_trie_new();
+    
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)trie);
+    
+    ldoc_trie_anno_t fauna = { FAUNA, (void*)123 };
+    ldoc_trie_anno_t flora = { FLORA, LDOC_TRIE_ANNO_NULL.pld };
+    
+    ldoc_trie_add(trie, entry_cat, EN_ALPH, fauna);
+    ldoc_trie_add(trie, entry_catnip, EN_ALPH, flora);
+    ldoc_trie_add(trie, entry_rose, EN_ALPH, flora);
+    
+    res = ldoc_trie_lookup(trie, "cat", false);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+    
+    res = ldoc_trie_lookup(trie, "catnip", false);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+    
+    res = ldoc_trie_lookup(trie, "rose", false);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+
+    // Removing "cat":
+    res = ldoc_trie_remove(trie, "cat");
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+    
+    res = ldoc_trie_lookup(trie, "cat", false);
+    EXPECT_EQ(NULL, (LDOC_NULLTYPE)res);
+    
+    res = ldoc_trie_lookup(trie, "catnip", false);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+    
+    res = ldoc_trie_lookup(trie, "rose", false);
+    EXPECT_NE(NULL, (LDOC_NULLTYPE)res);
+    
+    ldoc_trie_free(trie);
+}
+
 TEST(ldoc_trie, collect)
 {
     ldoc_trie_t* trie = ldoc_trie_new();
