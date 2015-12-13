@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ ! -d glitter.xcodeproj ]] ; then
+if [[ ! -d libdocument.xcodeproj ]] ; then
     cmake -G Xcode
 fi
 
