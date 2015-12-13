@@ -830,10 +830,7 @@ TEST(ldoc_document, py_import)
     PyObject* mod = PyImport_Import(nme);
     Py_DECREF(nme);
     
-    if (!mod)
-    {
-        // TODO Error handling.
-    }
+    EXPECT_NE((PyObject*)NULL, mod);
     
     PyObject* fn = PyObject_GetAttrString(mod, "example_dict");
     
