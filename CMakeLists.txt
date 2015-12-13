@@ -4,8 +4,8 @@ set(CMAKE_BUILD_TYPE Release)
 
 project(libdocument VERSION 0.0.1 LANGUAGES C CXX)
 
-set(PYTHON_VERSION "3.4")
-set(PYTHON_PATCH "3")
+set(PYTHON_VERSION "3.5")
+#set(PYTHON_PATCH "3")
 set(PYTHON_SUFFIX "m")
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
@@ -41,8 +41,8 @@ include(ExternalProject)
 #     BUILD_COMMAND ${MAKE})
 
 ExternalProject_Add(python
-    HG_REPOSITORY https://hg.python.org/cpython
-    HG_TAG v${PYTHON_VERSION}.${PYTHON_PATCH}
+    GIT_REPOSITORY https://github.com/python/cpython.git
+    GIT_TAG ${PYTHON_VERSION}
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     CONFIGURE_COMMAND ./configure
