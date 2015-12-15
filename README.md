@@ -16,7 +16,7 @@ Building LibDocument
 
 #### Compiling & Testing
 
-> *Note:* Python support can be removed for iOS builds using the `LDOC_NOPYTHON` compiler flag.
+> **Note:** Python support can be removed for iOS builds using the `LDOC_NOPYTHON` compiler flag.
 >
 > In Xcode, go to your project settings, choose the "Build Settings" tab, scroll down to the "Apple LLVM - Preprocessing" section, expand the node "Preprocessor Macros" and add to "Debug"/"Release" the flag "LDOC\_NOPYTHON=1".
 
