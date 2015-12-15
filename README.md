@@ -18,7 +18,7 @@ Building LibDocument
 
 > **Note:** Python support can be removed for iOS builds using the `LDOC_NOPYTHON` compiler flag.
 >
-> In Xcode, go to your project settings, choose the "Build Settings" tab, scroll down to the "Apple LLVM - Preprocessing" section, expand the node "Preprocessor Macros" and add to "Debug"/"Release" the flag "LDOC\_NOPYTHON=1".
+> In Xcode, go to your project settings, choose the "Build Settings" tab, scroll down to the "Apple LLVM - Preprocessing" section, expand the node "Preprocessor Macros" and add to "Debug"/"Release" the flag `LDOC_NOPYTHON=1`.
 
 Setting path to modules for Python 3 and running Xcode in that environment:
 
