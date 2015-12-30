@@ -1,5 +1,13 @@
 #include <document.h>
 
+/* TODO
+ *
+ * Needs at least one good example. Ideally more.
+ *
+ * Use this code to see whether the target compiles, but for actual
+ * functionality examples look at the unit tests (`tests` target).
+ */
+
 int main(int argc, char** argv)
 {
     ldoc_doc_t* doc = ldoc_doc_new();
