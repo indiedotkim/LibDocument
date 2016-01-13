@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2015 CODAMONO, Ontario, Canada
+ * Copyright (c) 2015-2016 CODAMONO, Ontario, Canada
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at: http://mozilla.org/MPL/2.0/
  */
 
 #include "document.h"
+
+#pragma mark - Null Constants for Structs
 
 ldoc_ser_t* LDOC_SER_NULL = NULL;
 ldoc_pos_t* LDOC_POS_NULL = NULL;
@@ -65,6 +67,8 @@ static const char* ldoc_cnst_json_null = "null";
 
 static const char* ldoc_cnst_json_cls = "}";
 static const char* ldoc_cnst_json_lcls = "]";
+
+#pragma mark - Declarations Outside of Header
 
 #ifndef LDOC_NOPYTHON
 static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict);
@@ -1739,9 +1743,11 @@ void ldoc_nde_ent_push(ldoc_nde_t* nde, ldoc_ent_t* ent)
     nde->ent_cnt++;
 }
 
-void ldoc_nde_ent_pop()
+ldoc_ent_t* ldoc_nde_ent_pop(ldoc_nde_t* nde)
 {
+    // TODO
     
+    return LDOC_ENT_NULL;
 }
 
 void ldoc_nde_ent_shift(ldoc_nde_t* nde, ldoc_ent_t* ent)
@@ -1751,14 +1757,16 @@ void ldoc_nde_ent_shift(ldoc_nde_t* nde, ldoc_ent_t* ent)
     nde->ent_cnt++;
 }
 
-void ldoc_nde_ent_unshift()
+ldoc_ent_t* ldoc_nde_ent_unshift(ldoc_nde_t* nde)
 {
-
+    // TODO
+    
+    return LDOC_ENT_NULL;
 }
 
-void ldoc_nde_ent_ins()
+void ldoc_nde_ent_ins(ldoc_ent_t* ent, ldoc_ent_t* ent_ref)
 {
-    
+    // TODO
 }
 
 void ldoc_ent_rm(ldoc_ent_t* ent)
@@ -1777,9 +1785,9 @@ void ldoc_nde_dsc_push(ldoc_nde_t* nde, ldoc_nde_t* dsc)
     nde->dsc_cnt++;
 }
 
-void ldoc_nde_dsc_pop()
+ldoc_nde_t* ldoc_nde_dsc_pop(ldoc_nde_t* nde)
 {
-    
+    // TODO
 }
 
 void ldoc_nde_dsc_shift(ldoc_nde_t* nde, ldoc_nde_t* dsc)
@@ -1789,14 +1797,14 @@ void ldoc_nde_dsc_shift(ldoc_nde_t* nde, ldoc_nde_t* dsc)
     nde->dsc_cnt++;
 }
 
-void ldoc_nde_dsc_unshift()
+ldoc_nde_t* ldoc_nde_dsc_unshift(ldoc_nde_t* nde)
 {
-    
+    // TODO
 }
 
-void ldoc_nde_dsc_ins()
+void ldoc_nde_dsc_ins(ldoc_nde_t* dsc, ldoc_nde_t* nde_ref)
 {
-    
+    // TODO
 }
 
 void ldoc_nde_rm(ldoc_nde_t* nde)
