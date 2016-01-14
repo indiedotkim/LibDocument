@@ -447,7 +447,7 @@ ldoc_doc_t* ldoc_json_read_doc(char* json, size_t len, off_t* err, off_t* nxt)
         if (err)
             *err = obj - json;
         
-        return NULL;
+        return LDOC_DOC_NULL;
     }
     
     ldoc_doc_t* doc = ldoc_doc_new();
@@ -470,7 +470,7 @@ ldoc_doc_t* ldoc_json_read(char* json, size_t len, off_t* err)
 ldoc_doc_t* ldoc_ldjson_read(char* ldj, size_t len, off_t* err, off_t* nxt)
 {
     if (*nxt >= len)
-        return NULL;
+        return LDOC_DOC_NULL;
     
     return ldoc_json_read_doc(ldj, len, err, nxt);
 }

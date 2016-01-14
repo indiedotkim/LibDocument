@@ -46,9 +46,9 @@
 /**
  * @file document.h
  *
- * @brief Document dot h.
- *
- *
+ * @brief Functions and data structures for creating annotated documents that are treelike
+ *        (cross references permitted). Serialization functions for HTML, JSON, and Python
+ *        objects.
  */
 
 #ifndef __ldoc__document__
@@ -633,27 +633,31 @@ typedef struct ldoc_vis_ent_t
 } ldoc_vis_ent_t;
 
 /**
- * @brief Null pointer for serialization data structures.
+ * @brief Null pointer for document objects.
+ */
+extern ldoc_doc_t* LDOC_DOC_NULL;
+/**
+ * @brief Null pointer for serialization objects.
  */
 extern ldoc_ser_t* LDOC_SER_NULL;
 /**
- * @brief Null pointer for cursors.
+ * @brief Null pointer for cursor objects.
  */
 extern ldoc_pos_t* LDOC_POS_NULL;
 /**
- * @brief Null pointer for node data structures.
+ * @brief Null pointer for node objects.
  */
 extern ldoc_nde_t* LDOC_NDE_NULL;
 /**
- * @brief Null pointer for entity data structures.
+ * @brief Null pointer for entity objects.
  */
 extern ldoc_ent_t* LDOC_ENT_NULL;
 /**
- * @brief Null pointer for result data structures.
+ * @brief Null pointer for result objects.
  */
 extern ldoc_res_t* LDOC_RES_NULL;
 /**
- * @brief Null pointer for annotation data structures.
+ * @brief Null pointer for annotation objects.
  */
 extern ldoc_doc_anno_t LDOC_ANNO_NULL;
 

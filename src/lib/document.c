@@ -10,6 +10,7 @@
 
 #pragma mark - Null Constants for Structs
 
+ldoc_doc_t* LDOC_DOC_NULL = NULL;
 ldoc_ser_t* LDOC_SER_NULL = NULL;
 ldoc_pos_t* LDOC_POS_NULL = NULL;
 ldoc_nde_t* LDOC_NDE_NULL = NULL;
@@ -150,7 +151,7 @@ inline static ldoc_ent_t* ldoc_pydict2doc_anno(PyObject* lbl, ldoc_content_t tpe
             break;
         default:
             // TODO Internal error.
-            ent = NULL;
+            ent = LDOC_ENT_NULL;
             break;
     }
     
@@ -171,8 +172,8 @@ inline static ldoc_nde_t* ldoc_pydict2doc_lst(PyObject* lbl, PyObject* lst)
     Py_ssize_t len = PyList_Size(lst);
 
     PyObject* val;
-    ldoc_ent_t* ent = NULL;
-    ldoc_nde_t* dsc = NULL;
+    ldoc_ent_t* ent = LDOC_ENT_NULL;
+    ldoc_nde_t* dsc = LDOC_NDE_NULL;
     while (pos < len)
     {
         val = PyList_GetItem(lst, pos++);
@@ -230,8 +231,8 @@ inline static ldoc_nde_t* ldoc_pydict2doc_dict(PyObject* lbl, PyObject* dict)
     PyObject* val;
     Py_ssize_t pos = 0;
     
-    ldoc_ent_t* ent = NULL;
-    ldoc_nde_t* dsc = NULL;
+    ldoc_ent_t* ent = LDOC_ENT_NULL;
+    ldoc_nde_t* dsc = LDOC_NDE_NULL;
     while (PyDict_Next(dict, &pos, &ky, &val))
     {
         if (PyDict_CheckExact(val))

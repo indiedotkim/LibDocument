@@ -9,7 +9,7 @@
 /**
  * @file trie.h
  *
- * @brief Trie dot h.
+ * @brief Functions and data structures for CRUD operations on tries (prefix trees).
  *
  *
  */
