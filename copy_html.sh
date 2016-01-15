@@ -11,7 +11,7 @@ for html in docs/html/*.html ; do
         | sed -E 's/^([^<].*)<\/h2>/\1<\/h2><dl>/g' \
         | sed -e ':a' -e 'N' -e '$!ba' -e 's/  <\/table>\n  <\/dd>\n<\/dl>/<\/dl><\/div>/g' \
         | sed -e ':a' -e 'N' -e '$!ba' -e 's/<\/p>\n<dl class="section return">/<\/p><div><dl class="section return">/' \
-        | sed -E 's/<dl class="section return"><dt>Returns<\/dt><dd>(.*)<\/dd><\/dl>/<div class="panel panel-default"><div class="panel-heading">Parameters and Return Value<\/div><dl class="dl-horizontal"><dt>Returns<\/dt><dd>\1<\/dd><\/dl><\/div><\/div>/' \
+        | sed -E 's/<dl class="section return"><dt>Returns<\/dt><dd>(.*)<\/dd><\/dl>/<div class="panel panel-default"><div class="panel-heading">Parameters and Return Value<\/div><dl class="dl-horizontal"><dt>Returns<\/dt><dd>\1<\/dd><\/dl><\/div>/' \
         | sed -E 's/ +(<table class="memname">|<\/table>|<tr>|<\/tr>)//g' \
         | sed -E 's/<td class="memname">(.*)<\/td>/<h4>\1<\/h4>/g' \
         | sed -E 's/<td class="fieldname">(.*)<\/td>/<td class="fieldname"><p><code>\1<\/code><\/p><\/td>/g' \
@@ -60,7 +60,6 @@ for html in docs/html/*.html ; do
         | sed -E 's/<a class="page-scroll btn btn-primary" href="#func-members">Functions/<a class="page-scroll btn btn-primary" href="#func-members"><i class="fa fa-share"><\/i><br \/>Functions/' \
         | sed -E 's/<a class="page-scroll btn btn-primary" href="#var-members">Variables/<a class="page-scroll btn btn-primary" href="#var-members"><i class="fa fa-columns"><\/i><br \/>Variables/' \
         | sed -E 's/<div class="container">/<div>/' \
-        | sed -e ':a' -e 'N' -e '$!ba' -e 's/<\/dd><\/dl><\/div><\/div>\n<\/div>/<\/dd><\/dl><\/div><\/div>/g' \
         > ../codamono.com/libdocument/$dest
 done
 
