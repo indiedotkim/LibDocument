@@ -8,6 +8,7 @@
 
 #include "trie.h"
 
+ldoc_trie_nde_t* LDOC_TRIE_NDE_NULL = NULL;
 ldoc_trie_anno_t LDOC_TRIE_ANNO_NULL = { 0, NULL };
 
 static inline char* ldoc_sheap_ccatc(char* str, size_t* len, size_t* max, char chr)
@@ -341,7 +342,7 @@ ldoc_trie_nde_t* ldoc_trie_dsc_iter(ldoc_trie_nde_t* nde, char chr)
             case EN_ALPH:
             case EN_ALPHNUM:
                 // TODO Error.
-                return NULL;
+                return LDOC_TRIE_NDE_NULL;
             case ASCII:
                 ci = nde->chr.c8[i];
                 break;
@@ -353,20 +354,20 @@ ldoc_trie_nde_t* ldoc_trie_dsc_iter(ldoc_trie_nde_t* nde, char chr)
                 break;
             default:
                 // TODO Error.
-                return NULL;
+                return LDOC_TRIE_NDE_NULL;
         }
         
         if (chr == ci)
             return nde->dscs[i];
     }
     
-    return NULL;
+    return LDOC_TRIE_NDE_NULL;
 }
 
 ldoc_trie_nde_t* ldoc_trie_dsc(ldoc_trie_nde_t* nde, char chr)
 {
     if (!nde->size)
-        return NULL;
+        return LDOC_TRIE_NDE_NULL;
     
     switch (nde->tpe)
     {
@@ -382,13 +383,13 @@ ldoc_trie_nde_t* ldoc_trie_dsc(ldoc_trie_nde_t* nde, char chr)
             break;
     }
     
-    return NULL;
+    return LDOC_TRIE_NDE_NULL;
 }
 
 ldoc_trie_nde_t* ldoc_trie_dscn(ldoc_trie_nde_t* nde, uint16_t n)
 {
     if (!nde->size)
-        return NULL;
+        return LDOC_TRIE_NDE_NULL;
     
     switch (nde->tpe)
     {
@@ -407,7 +408,7 @@ ldoc_trie_nde_t* ldoc_trie_dscn(ldoc_trie_nde_t* nde, uint16_t n)
             break;
     }
     
-    return NULL;
+    return LDOC_TRIE_NDE_NULL;
 }
 
 void ldoc_trie_nde_free(ldoc_trie_nde_t* nde)
@@ -525,13 +526,13 @@ ldoc_trie_nde_t* ldoc_trie_lookup_trv(ldoc_trie_nde_t* nde, const char* string, 
         else if (nde->alloc == NDE_ANNO)
             return nde;
         else
-            return NULL;
+            return LDOC_TRIE_NDE_NULL;
     }
     
     ldoc_trie_nde_t* dsc = ldoc_trie_dsc(nde, chr);
     
     if (!dsc)
-        return NULL;
+        return LDOC_TRIE_NDE_NULL;
     
     return ldoc_trie_lookup_trv(dsc, string + 1, prefixes);
 }
