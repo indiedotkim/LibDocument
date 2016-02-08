@@ -37,21 +37,7 @@ Unit tests:
 
 -  run `tests` target
 
-#### Building Documentation
-
-Install appledoc:
-
-    brew install appledoc
-
-Set up a new build target in Xcode as described [here](https://github.com/tomaz/appledoc/blob/master/XcodeIntegrationScript.markdown).
-
-
 ### Make (Linux & Mac OS X)
 
     cmake -G 'Unix Makefiles'
-
-### Common Errors
-
-    Fatal Python error: Py_Initialize: unable to load the file system codec
-    ImportError: No module named 'encodings'
 
