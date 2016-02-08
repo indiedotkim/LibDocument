@@ -2,6 +2,8 @@
 
 set -e
 
+VERSION=`grep project\( CMakeLists.txt | cut -d ' ' -f 3`
+
 for html in docs/html/*.html ; do
     dest=`echo "$html" | sed -E 's/docs\/html\///'`
     sed -E 's/(index)?([^".]*)\.html/\/libdocument\/\2/g' "$html" \
@@ -16,6 +18,7 @@ for html in docs/html/*.html ; do
         | sed -E 's/<td class="memname">(.*)<\/td>/<h4>\1<\/h4>/g' \
         | sed -E 's/<td class="fieldname">(.*)<\/td>/<td class="fieldname"><p><code>\1<\/code><\/p><\/td>/g' \
         | sed -e ':a' -e 'N' -e '$!ba' -e 's/<dl class="params"><dt>Parameters<\/dt><dd>\n  <table class="params">/<table class="params"><div class="panel-heading">Parameters and Return Value<\/div><dl class="dl-horizontal">/g' \
+        | sed -E 's/<td class="paramtype">(.*[^*])&#160;<\/td>/<td class="paramtype">\1\&nbsp;<\/td>/g' \
         | sed -E 's/<td class="paramname">(.*)<\/td><td>(.*)<\/td><\/tr>/<dt><code>\1<\/code><\/dt><dd>\2<\/dd>/g' \
         | sed -E 's/<table class="([^"]+)">/<div class="panel panel-default \1">/g' \
         | sed -E 's/<tr><th[^>]*>([^<]+)<\/th><\/tr>/<div class="panel-heading">\1<\/div><dl class="dl-horizontal">/g' \
@@ -60,6 +63,7 @@ for html in docs/html/*.html ; do
         | sed -E 's/<a class="page-scroll btn btn-primary" href="#func-members">Functions/<a class="page-scroll btn btn-primary" href="#func-members"><i class="fa fa-share"><\/i><br \/>Functions/' \
         | sed -E 's/<a class="page-scroll btn btn-primary" href="#var-members">Variables/<a class="page-scroll btn btn-primary" href="#var-members"><i class="fa fa-columns"><\/i><br \/>Variables/' \
         | sed -E 's/<div class="container">/<div>/' \
+        | sed -E "s/<div class=\"contents\">/<div class=\"contents\"><p class=\"text-right text-muted\">Version: $VERSION<\\/p>/" \
         > ../codamono.com/libdocument/$dest
 done
 
