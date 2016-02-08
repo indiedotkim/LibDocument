@@ -14,7 +14,15 @@
  * products [BioInterchange](https://www.codamono.com/biointerchange/) (Mac OS X
  * and Linux) and [Brightword](https://www.codamono.com/brightword/) (iOS).
  *
+ * **Contributing:** Even though the library is stable in large parts, it needs
+ * some more work in particular when it comes to error handling and proper support
+ * for UTF. Error handling stubs are mostly in place (`if` statements with an
+ * empty code block), but function signatures need to be extended with an
+ * error-code pointer (such as `f(..., ldoc_err_t* err)`).
+ *
  * **License:** [Mozilla Public License, v. 2.0](http://mozilla.org/MPL/2.0/)
+ *
+ * **GitHub Repo:** [https://github.com/indiedotkim/LibDocument](https://github.com/indiedotkim/LibDocument)
  *
  * ### Documents
  * 
