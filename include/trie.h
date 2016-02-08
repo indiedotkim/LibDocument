@@ -124,11 +124,6 @@ typedef struct ldoc_trie_anno_t
 } ldoc_trie_anno_t;
 
 /**
- * @brief Null pointer for trie nodes.
- */
-extern ldoc_trie_anno_t LDOC_TRIE_NDE_NULL;
-
-/**
  * @brief Null pointer for trie annotations.
  */
 extern ldoc_trie_anno_t LDOC_TRIE_ANNO_NULL;
@@ -189,6 +184,11 @@ typedef struct ldoc_trie_nde_t
      */
     ldoc_trie_anno_t anno;
 } ldoc_trie_nde_t;
+
+/**
+ * @brief Null pointer for trie nodes.
+ */
+extern ldoc_trie_nde_t* LDOC_TRIE_NDE_NULL;
 
 /**
  * @brief Trie-node array.
