@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 
 set(CMAKE_BUILD_TYPE Release)
 
-project(libdocument VERSION 0.1.0 LANGUAGES C CXX)
+project(libdocument VERSION 0.1.1 LANGUAGES C CXX)
 
 set(PYTHON_VERSION "3.5")
 #set(PYTHON_PATCH "3")
