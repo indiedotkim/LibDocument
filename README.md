@@ -37,6 +37,17 @@ Unit tests:
 
 -  run `tests` target
 
+> **Note:** Tests cannot be run without your Python 3 environment configured correctly within Xcode.
+>
+> A ill-configured Python 3 environment gives this error:
+> 
+>     Fatal Python error: Py_Initialize: unable to load the file system codec
+>     ImportError: No module named 'encodings'
+>
+> It is then best to set the `PYTHONPATH` environment variable for the `tests` target (`Run` schema):
+>
+>     /usr/local/Cellar/python3/3.5.0/Frameworks/Python.framework/Versions/3.5/lib/python3.5:/Users/YOURUSERNAME/PATHTOLIBDOCUMENT/test
+
 ### Make (Linux & Mac OS X)
 
     cmake -G 'Unix Makefiles'
