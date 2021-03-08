@@ -9,6 +9,8 @@ Building LibDocument
 
 #### Prerequisites (Linux, Debian/Ubuntu)
 
+Just for building LibDocument with Python support, but without being able to run Python unit-tests:
+
     apt update
     apt install build-essential
     apt install git
@@ -17,6 +19,32 @@ Building LibDocument
     git clone https://github.com/indiedotkim/LibDocument.git
     cd LibDocument
 
+To run the unit-test with Python support, well, you need to install Python. Here is the quickest way to do this with pyenv (apt install-list is from pyenv's Dockerfile; assumes BASH or ZSH; Python version should match Python version in CMakeLists.txt):
+
+    git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+    cd ~/.pyenv && src/configure && make -C src
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    apt install libssl-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        wget \
+        curl \
+        llvm \
+        libncurses5-dev \
+        libncursesw5-dev \
+        xz-utils \
+        tk-dev \
+        libffi-dev \
+        liblzma-dev \
+        python-openssl
+    pyenv install 3.9.2
+    pyenv global 3.9.2
+    export PYTHONHOME="$HOME/.pyenv/versions/3.9.2"
+
 #### Building LibDocument
 
     cmake -G 'Unix Makefiles'
@@ -24,7 +52,17 @@ Building LibDocument
 
 #### Unit tests:
 
-    ./tests
+    PYTHONPATH="`pwd`/test" ./tests
+
+The final line of the output should start with `[  PASSED  ]`.
+
+#### Troubleshooting
+
+If the Python unit-tests fail with a cryptic error message (see output below), then your PYTHONHOME and/or PYTHONPATH are set incorrectly.
+
+    Fatal Python error: init_fs_encoding: failed to get the Python codec of the filesystem encoding
+    Python runtime state: core initialized
+    ModuleNotFoundError: No module named 'encodings'
 
 ### Using Xcode (Mac OS X)
 
