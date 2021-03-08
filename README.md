@@ -5,14 +5,37 @@
 Building LibDocument
 --------------------
 
-### Xcode (Mac OS X)
+### Using cmake (Linux & Mac OS X)
+
+#### Prerequisites (Linux, Debian/Ubuntu)
+
+    apt update
+    apt install build-essential
+    apt install git
+    apt install cmake
+    apt install libffi-dev
+    git clone https://github.com/indiedotkim/LibDocument.git
+    cd LibDocument
+
+#### Building LibDocument
+
+    cmake -G 'Unix Makefiles'
+    make
+
+#### Unit tests:
+
+    ./tests
+
+### Using Xcode (Mac OS X)
 
 #### Prerequisites
 
+I assume you have set-up a full development environment already (see Linux, Debian/Ubuntu prerequisites). Sorry, I will provide clearer instructions later. About Python though:
+
     brew install python3
     brew install pyenv
-    pyenv install 3.5.0
-    pyenv local 3.5.0
+    pyenv install 3.9.1
+    pyenv local 3.9.1
     eval "$(pyenv init -)"
 
 #### Compiling & Testing
@@ -47,8 +70,4 @@ Unit tests:
 > It is then best to set the `PYTHONPATH` environment variable for the `tests` target (`Run` schema):
 >
 >     /usr/local/Cellar/python3/3.5.0/Frameworks/Python.framework/Versions/3.5/lib/python3.5:/Users/YOURUSERNAME/PATHTOLIBDOCUMENT/test
-
-### Make (Linux & Mac OS X)
-
-    cmake -G 'Unix Makefiles'
 

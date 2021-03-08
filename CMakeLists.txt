@@ -125,8 +125,7 @@ target_link_libraries(document-static libpython-static)
 # Executables:
 add_executable(libdocument-ex1 src/examples/ex1.c)
 # Note: removed libbson-lib
-# TODO: Why do I have to add 'python' and 'libpython-static' here?
-add_dependencies(libdocument-ex1 python libpython-static document-static)
+add_dependencies(libdocument-ex1 document-static)
 
 add_executable(tests ${test_SRC})
 add_dependencies(tests document-static googletest-lib)
@@ -136,22 +135,25 @@ add_dependencies(tests document-static googletest-lib)
 #
 
 if(APPLE)
-    find_library(INTL_LIB
+find_library(INTL_LIB
     NAMES intl libintl
     HINTS "/usr/local/lib"
 )
 target_link_libraries(libdocument-ex1 document-static ${INTL_LIB})
 else(APPLE)
-target_link_libraries(libdocument-ex1 document-static dl m pthread util)
+target_link_libraries(libdocument-ex1 document-static lpython m util pthread dl)
 endif(APPLE)
 
-# As suggested in the googletest README: link libgtest statically:
+# As suggested in the googletest README: link libgtest statically; doing same for Python:
 add_library(gtest STATIC IMPORTED)
 set_target_properties(gtest PROPERTIES
     IMPORTED_LOCATION src/googletest/lib/libgtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_library(lpython STATIC IMPORTED)
+set_target_properties(lpython PROPERTIES
+    IMPORTED_LOCATION src/python/libpython${PYTHON_VERSION}${CMAKE_STATIC_LIBRARY_SUFFIX})
 if(APPLE)
 target_link_libraries(tests document-static gtest ${INTL_LIB})
 else(APPLE)
-target_link_libraries(tests document-static dl m pthread util gtest)
+target_link_libraries(tests document-static gtest lpython m util pthread dl)
 endif(APPLE)
 
