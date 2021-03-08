@@ -21,6 +21,7 @@
 const char* ldoc_json_small = "{ \"key1\" : 123, \"key2\" : \"Hello\\n\", \"key3\" : [ \"val3.1\", 3.141, null, true, false, [[ { \"nested\" : true } ]] ] }";
 const char* ldoc_json_small_ref = "{\"key1\":123,\"key2\":\"Hello\\n\",\"key3\":[\"val3.1\",3.141,null,true,false,[[{\"nested\":true}]]]}";
 
+const char* ldoc_json_empty = "{}";
 const char* ldoc_json_empty_list = "{ \"key1\" : [] }";
 const char* ldoc_json_empty_list_ref = "{\"key1\":[]}";
 
@@ -30,7 +31,7 @@ TEST(ldoc_json, empty_json)
 {
     off_t err = 0;
     
-    ldoc_doc_t* doc = ldoc_json_read("{}", 2, &err);
+    ldoc_doc_t* doc = ldoc_json_read((char*)ldoc_json_empty, 2, &err);
     EXPECT_EQ(0, err);
 }
 

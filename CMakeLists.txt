@@ -4,10 +4,30 @@ set(CMAKE_BUILD_TYPE Release)
 
 project(libdocument VERSION 0.1.1 LANGUAGES C CXX)
 
-set(PYTHON_VERSION "3.5")
-#set(PYTHON_PATCH "3")
-set(PYTHON_SUFFIX "m")
+#
+# CUSTOMIZATION SECTION
+#
+# If you need to change CPython, googletest version numbers, then do this here!
+#
 
+set(PYTHON_VERSION "3.9")
+set(PYTHON_PATCH "1")
+set(PYTHON_SUFFIX "")
+
+set(GOOGLETEST_VERSION "1.10")
+set(GOOGLETEST_PATCH "0")
+
+if(APPLE)
+# Currently: Big Sur and beyond.
+set(MACOSX_DEPLOYMENT_TARGET "11.0")
+endif(APPLE)
+
+#
+# CUSTOMIZATION DONE
+#
+
+# Do not touch these:
+set(CMAKE_CXX_STANDARD 17)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # Sources of LibDocument:
@@ -42,22 +62,21 @@ include(ExternalProject)
 
 ExternalProject_Add(python
     GIT_REPOSITORY https://github.com/python/cpython.git
-    GIT_TAG ${PYTHON_VERSION}
+    GIT_TAG v${PYTHON_VERSION}.${PYTHON_PATCH}
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/python
-    CONFIGURE_COMMAND ./configure
+    CONFIGURE_COMMAND MACOSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} ./configure
     BUILD_COMMAND ${MAKE}
     INSTALL_COMMAND true)
 
 # Dependency googletest -- note that SOURCE_DIR and BINARY_DIR are the same:
 ExternalProject_Add(googletest-lib
-    SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk
-    SVN_REVISION -r "700"
-    SVN_TRUST_CERT 1
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-${GOOGLETEST_VERSION}.${GOOGLETEST_PATCH}
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/googletest
     BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/googletest
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND autoreconf -fi COMMAND ./configure
+    CONFIGURE_COMMAND cmake -DCMAKE_CXX_STANDARD=17 -G "Unix Makefiles"
     BUILD_COMMAND ${MAKE}
     INSTALL_COMMAND true)
 
@@ -74,7 +93,7 @@ ExternalProject_Add(googletest-lib
 #
 
 include_directories(include)
-include_directories(src/googletest/include)
+include_directories(src/googletest/googletest/include)
 
 link_directories(lib)
 
@@ -117,7 +136,11 @@ add_dependencies(tests document-static googletest-lib)
 #
 
 if(APPLE)
-target_link_libraries(libdocument-ex1 document-static)
+    find_library(INTL_LIB
+    NAMES intl libintl
+    HINTS "/usr/local/lib"
+)
+target_link_libraries(libdocument-ex1 document-static ${INTL_LIB})
 else(APPLE)
 target_link_libraries(libdocument-ex1 document-static dl m pthread util)
 endif(APPLE)
@@ -125,9 +148,9 @@ endif(APPLE)
 # As suggested in the googletest README: link libgtest statically:
 add_library(gtest STATIC IMPORTED)
 set_target_properties(gtest PROPERTIES
-    IMPORTED_LOCATION src/googletest/lib/.libs/libgtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+    IMPORTED_LOCATION src/googletest/lib/libgtest${CMAKE_STATIC_LIBRARY_SUFFIX})
 if(APPLE)
-target_link_libraries(tests document-static gtest)
+target_link_libraries(tests document-static gtest ${INTL_LIB})
 else(APPLE)
 target_link_libraries(tests document-static dl m pthread util gtest)
 endif(APPLE)
