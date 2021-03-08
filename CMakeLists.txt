@@ -11,7 +11,7 @@ project(libdocument VERSION 0.1.1 LANGUAGES C CXX)
 #
 
 set(PYTHON_VERSION "3.9")
-set(PYTHON_PATCH "1")
+set(PYTHON_PATCH "2")
 set(PYTHON_SUFFIX "")
 
 set(GOOGLETEST_VERSION "1.10")
