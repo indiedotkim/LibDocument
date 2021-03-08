@@ -774,13 +774,13 @@ TEST(ldoc_document, format_py)
     ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
     ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_py);
     
+    Py_Initialize();
+    
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     EXPECT_NE(LDOC_SER_NULL, ser);
     EXPECT_EQ(LDOC_SER_PY_DCT, ser->tpe);
     EXPECT_EQ((PyObject*)NULL, ser->pld.py.anno);
     EXPECT_NE((PyObject*)NULL, ser->pld.py.dtm);
-    
-    Py_Initialize();
     
     char* s = ldoc_py2str(ser->pld.py.dtm);
     EXPECT_NE((char*)NULL, s);
@@ -808,13 +808,13 @@ TEST(ldoc_document, format_py_multiple_lists)
     ldoc_vis_ent_t* vis_ent = ldoc_vis_ent_new();
     ldoc_vis_ent_uni(vis_ent, ldoc_vis_ent_py);
     
+    Py_Initialize();
+    
     ldoc_ser_t* ser = ldoc_format(doc, vis_nde, vis_ent);
     EXPECT_NE(LDOC_SER_NULL, ser);
     EXPECT_EQ(LDOC_SER_PY_DCT, ser->tpe);
     EXPECT_EQ((PyObject*)NULL, ser->pld.py.anno);
     EXPECT_NE((PyObject*)NULL, ser->pld.py.dtm);
-    
-    Py_Initialize();
     
     char* s = ldoc_py2str(ser->pld.py.dtm);
     EXPECT_NE((char*)NULL, s);
