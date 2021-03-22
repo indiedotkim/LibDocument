@@ -92,8 +92,10 @@ ExternalProject_Add(googletest-lib
 # libdocument generation:
 #
 
-include_directories(include)
-include_directories(src/googletest/googletest/include)
+include_directories("${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/src/python"
+    "${CMAKE_SOURCE_DIR}/src/python/Include"
+    "${CMAKE_SOURCE_DIR}/src/googletest/googletest/include")
 
 link_directories(lib)
 
