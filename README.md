@@ -12,10 +12,10 @@ Building LibDocument
 Just for building LibDocument with Python support, but without being able to run Python unit-tests:
 
     apt update
-    apt install build-essential
-    apt install git
-    apt install cmake
-    apt install libffi-dev
+    apt -y install build-essential
+    apt -y install git
+    apt -y install cmake
+    apt -y install libffi-dev
     git clone https://github.com/indiedotkim/LibDocument.git
     cd LibDocument
 
